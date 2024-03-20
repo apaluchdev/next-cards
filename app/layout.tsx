@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import "@radix-ui/themes/styles.css";
 import "./globals.css";
+import { AppContextProvider } from "@/context/app-context";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -16,7 +18,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <AppContextProvider>
+        <body className={inter.className}>
+          {children}
+          <footer className="p-2 fixed bottom-0 opacity-50">
+            Created by Adrian Paluch
+          </footer>
+        </body>
+      </AppContextProvider>
     </html>
   );
 }
