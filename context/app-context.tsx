@@ -23,7 +23,7 @@ export function AppContextProvider({
   const [state, setState] = useState<UserGameData | null>({
     name: "John",
     score: 0,
-    session: "1234",
+    session: "",
   }); // Update the type of setState
   return (
     <AppContext.Provider value={{ state, setState }}>

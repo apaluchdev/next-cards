@@ -1,26 +1,30 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ConnectToWebSocket } from "@/lib/connection-manager";
 import GameCanvas from "@/components/game-components/game-canvas";
 import { CopyTextButton } from "@/components/ui/copy-text-button";
 import { useAppContext } from "@/context/app-context";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { MessageReceiver, useWebSocket } from "@/hooks/use-websocket";
+
+// TODO - implement that card game CHEAT with AI :)
 
 export default function Home() {
   const router = useRouter();
   const { state, setState } = useAppContext();
+  const [message, setMessage] = useState<string>("");
+  const [isConnected, setIsConnected] = useState<boolean>(false);
 
-  const linkURL = `localhost:3000/${state?.session}`;
-  // Redirect to login if no userId cookie is found
+  const linkURL = state?.session
+    ? `ws://localhost:8080/session/connect?id=${state?.session}` // TODO this should be the url param
+    : "ws://localhost:8080/session/connect";
+
+  const { socket, connect, disconnect, reconnect } = useWebSocket();
+
+  // Redirect to login if no userId cookie is found - TODO make this middleware
   useEffect(() => {
     const userId = document.cookie.replace(
       /(?:(?:^|.*;\s*)userId\s*=\s*([^;]*).*$)|^.*$/,
@@ -32,23 +36,32 @@ export default function Home() {
     }
   }, []);
 
-  const handleClick = async (callback: Function) => {
+  const handleMessage = (message: string) => {
+    console.log("Message received:", message);
+    setMessage(message);
+  };
+
+  const handleConnectToWebSocket = () => {
     try {
-      await ConnectToWebSocket(callback);
+      connect(linkURL);
+      setIsConnected(true);
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Error connecting to WebSocket", error);
     }
   };
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
       <h1 className="text-4xl">Welcome {state?.name}</h1>
       <div className="flex flex-col gap-4">
-        {!state?.session && (
-          <Button variant="default" onClick={() => handleClick(() => {})}>
+        {!isConnected && (
+          <Button variant="default" onClick={handleConnectToWebSocket}>
             Create Game
           </Button>
         )}
-
+        {isConnected && (
+          <MessageReceiver socket={socket} onMessage={handleMessage} />
+        )}
         <div className="flex justify-center items-center gap-2 tracking-tight">
           <div className="grid flex-1 gap-2">
             <div>
@@ -62,8 +75,8 @@ export default function Home() {
               {linkURL}
             </Label>
             <div className="flex gap-2 items-center">
-              <Input id="link" defaultValue={linkURL} readOnly />
-              <CopyTextButton link={linkURL}></CopyTextButton>
+              <Input id="link" defaultValue={linkURL || ""} readOnly />
+              <CopyTextButton link={linkURL || ""}></CopyTextButton>
             </div>
           </div>
         </div>

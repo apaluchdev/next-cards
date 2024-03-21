@@ -1,6 +1,3 @@
-import { useAppContext } from "@/context/app-context";
-const { state, setState } = useAppContext();
-
 interface SessionInfo {
   sessionUuid: string;
   playerIds: string[];
