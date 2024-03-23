@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,13 +16,17 @@ import {
 } from "@/components/ui/form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useAppContext } from "@/context/app-context";
 const formSchema = z.object({
   username: z.string().min(2).max(50),
 });
 
 const LoginPage = () => {
   const router = useRouter();
+  const { state, setState } = useAppContext();
+  const searchParams = useSearchParams();
 
+  const idQueryParam = searchParams.get("id");
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -32,6 +36,7 @@ const LoginPage = () => {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
+      setState({ name: values.username, score: 0, session: "" });
       const response = await fetch(
         `http://localhost:8080/auth/login?username=${values.username}`,
         {
@@ -43,7 +48,7 @@ const LoginPage = () => {
       console.log(JSON.stringify(data));
       if (response.ok) {
         console.log("Login successful");
-        router.push("/");
+        router.push(`/?id=${idQueryParam}`);
       } else {
         console.log("Login error");
       }

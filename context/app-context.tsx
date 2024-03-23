@@ -3,9 +3,9 @@
 import { createContext, useContext, useState } from "react";
 
 type UserGameData = {
-  name: string;
-  score: number;
-  session: string;
+  name: string | undefined;
+  score: number | undefined;
+  session: string | undefined;
 };
 
 type AppContext = {
@@ -21,7 +21,7 @@ export function AppContextProvider({
   children: React.ReactNode;
 }) {
   const [state, setState] = useState<UserGameData | null>({
-    name: "John",
+    name: "",
     score: 0,
     session: "",
   }); // Update the type of setState
