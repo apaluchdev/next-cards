@@ -10,14 +10,15 @@ import { GameMessage, GameMessageTypes, GameState } from "@/lib/game-manager";
 import Image from "next/image";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/components/ui/use-toast";
 
 // TODO - implement that card game CHEAT with AI :)
 
 export default function Home() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { toast } = useToast();
   // const { state, setState } = useAppContext();
-  const [message, setMessage] = useState<string>("");
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [gameState, setGameState] = useState<GameState>({
     players: [],
@@ -38,11 +39,14 @@ export default function Home() {
 
   const handleMessage = (message: any) => {
     console.log("Message received:", message);
-    setMessage(message); // Remove this later, make the gamestate function re-render if need be
+    // setGameState((prevState) => ({
+    //   ...prevState,
+    // }));
 
-    setGameState((prevState) => ({
-      ...prevState,
-    }));
+    toast({
+      title: "Message Received From Server",
+      description: message.messageType,
+    });
 
     UpdateGameStateFromMessage(message, gameState, setGameState);
   };
@@ -81,7 +85,6 @@ export default function Home() {
     });
   };
 
-  //console.log("Session UUID: ", gameState?.sessionUuid);
   const ConnectionInfo: React.FC = () => {
     return (
       <div className="flex flex-col items-center gap-4">
@@ -90,21 +93,27 @@ export default function Home() {
           Disconnect
         </Button>
         <PlayerList />
-        {/* <div>
-          {" "}
-          <h1 className="font-semibold tracking-tight">Players:</h1>
-          <ul>
-            {gameState?.players &&
-              gameState.players.map((player) => (
-                <li key={player.PlayerId}>{player.PlayerName}</li>
-              ))}
-          </ul>
-        </div> */}
       </div>
     );
   };
 
-  const Title = () => {
+  const SessionInfo: React.FC = () => {
+    return (
+      <div className=" font-bold">
+        <h2>Game State:</h2>
+        <p>Session UUID: {gameState.sessionUuid}</p>
+        <p>Game Started: {gameState.gameStarted ? "Yes" : "No"}</p>
+        <p>Players:</p>
+        <ul className="font-normal">
+          {gameState.players.map((player) => (
+            <li key={player.PlayerId}>{player.PlayerName}</li>
+          ))}
+        </ul>
+      </div>
+    );
+  };
+
+  const Title: React.FC = () => {
     return (
       <div className="mb-12">
         <h1 className="text-center text-6xl tracking-tight ">
@@ -122,24 +131,9 @@ export default function Home() {
     );
   };
 
-  const PlayerList = () => {
+  const PlayerList: React.FC = () => {
     if (!gameState?.players) return null;
 
-    // gameState?.players.map((player) => {
-    //   console.log(player.PlayerName);
-    //   console.log(player.PlayerId);
-    // });
-
-    // return (
-    //   <ScrollArea className="h-72 w-48 rounded-md border">
-    //     <div className="p-4">
-    //       <h4 className="mb-4 text-sm font-medium leading-none">Tags</h4>
-    //       {gameState.players.map((player) => (
-    //         <li key={player.PlayerId}>{player.PlayerName}</li>
-    //       ))}
-    //     </div>
-    //   </ScrollArea>
-    // );
     return (
       <ScrollArea className="h-48 w-48 rounded-md border">
         <div className="p-4">
@@ -167,6 +161,7 @@ export default function Home() {
           </Button>
         )}
         {isConnected && <ConnectionInfo />}
+        <SessionInfo />
       </div>
     </main>
   );
@@ -181,10 +176,6 @@ function UpdateGameStateFromMessage(
     return;
   }
 
-  console.log("Message Type " + gameMessage.messageType);
-  console.log(
-    "Session id prior to handling message: " + currentGameState.sessionUuid
-  );
   switch (gameMessage.messageType) {
     case GameMessageTypes.PLAYER_JOINED:
       console.log("Player joined", gameMessage.message);
@@ -194,16 +185,13 @@ function UpdateGameStateFromMessage(
       console.log("Player left", gameMessage.message);
       break;
     case GameMessageTypes.SESSION_STARTED:
-      console.log("Session Started Message: ", gameMessage.message);
+      console.log("Session Started: ", gameMessage.message);
 
       const playerObjects: Record<string, any> = gameMessage.message.players;
       const players: Player[] = Object.values(playerObjects).map((player) => {
         return { PlayerId: player.playerId, PlayerName: player.playerName };
       });
 
-      console.log("Setting session ID: ", gameMessage.message.sessionId);
-
-      console.log("Players at start: ", players);
       setGameState((prevState) => ({
         ...prevState,
         sessionUuid: gameMessage.message.sessionId,
@@ -230,8 +218,6 @@ function HandlePlayerJoined(
     PlayerId: gameMessage.message.playerId,
     PlayerName: gameMessage.message.playerName,
   });
-
-  console.log("Setting session ID: ", currentGameState.sessionUuid);
 
   // This is overwriting players with the old gameMessage
   setGameState((prevState) => {
