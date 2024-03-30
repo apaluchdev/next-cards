@@ -1,20 +1,27 @@
 type StartSession = {
-  type: "start-session";
+  type: "startSession";
   sessionUuid: string;
   playerIds: string[];
 };
 
 type StopSession = {
-  type: "stop-session";
+  type: "stopSession";
   sessionUuid: string;
 };
 
 type PlayerJoined = {
-  type: "player-joined";
+  type: "playerJoined";
   playerId: string;
+  playerName: string;
 };
 
 type PlayerLeft = {
-  type: "player-left";
+  type: "playerLeft";
   playerId: string;
+};
+
+type PlayerReady = {
+  type: "playerReady";
+  playerId: string;
+  playerReady: boolean;
 };

@@ -5,6 +5,7 @@ interface WebSocketHook {
   connect: (url: string) => boolean;
   disconnect: () => boolean;
   reconnect: (newUrl: string) => boolean;
+  sendMessage: (data: Object) => void;
 }
 
 // Custom hook to manage WebSocket connection
@@ -35,6 +36,18 @@ export const useWebSocket = (onMessageCallback: Function): WebSocketHook => {
     return true;
   };
 
+  const sendMessage = (data: Object) => {
+    console.log("Attempting to send message...");
+    if (!socket) return;
+
+    if (socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify(data));
+      console.log("Data sent:", data);
+    } else {
+      console.error("WebSocket connection is not open.");
+    }
+  };
+
   const disconnect = () => {
     if (socket) {
       try {
@@ -52,7 +65,7 @@ export const useWebSocket = (onMessageCallback: Function): WebSocketHook => {
     return connect(newUrl);
   };
 
-  return { socket, connect, disconnect, reconnect };
+  return { socket, connect, disconnect, reconnect, sendMessage };
 };
 
 // export const MessageReceiver: React.FC<{

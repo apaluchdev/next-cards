@@ -11,6 +11,7 @@ import Image from "next/image";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/components/ui/use-toast";
+import { Check, CircleEllipsis } from "lucide-react";
 
 // TODO - implement that card game CHEAT with AI :)
 
@@ -24,9 +25,9 @@ export default function Home() {
     players: [],
     sessionUuid: "",
     gameStarted: false,
+    playerId: "",
+    ready: false,
   });
-
-  const _gameState: GameState = gameState;
 
   const idQueryParam = searchParams.get("id");
   //   router.push(`?id=${gameState.sessionUuid}`, {
@@ -38,11 +39,7 @@ export default function Home() {
     : "localhost:3000";
 
   const handleMessage = (message: any) => {
-    console.log("Message received:", message);
-    // setGameState((prevState) => ({
-    //   ...prevState,
-    // }));
-
+    console.log("Message received from server", message);
     toast({
       title: "Message Received From Server",
       description: message.messageType,
@@ -51,7 +48,7 @@ export default function Home() {
     UpdateGameStateFromMessage(message, gameState, setGameState);
   };
 
-  const { socket, connect, disconnect, reconnect } =
+  const { socket, connect, disconnect, reconnect, sendMessage } =
     useWebSocket(handleMessage);
 
   const handleConnectToWebSocket = () => {
@@ -77,6 +74,8 @@ export default function Home() {
       players: [],
       sessionUuid: "",
       gameStarted: false,
+      playerId: "",
+      ready: false,
     });
     disconnect();
     setIsConnected(false);
@@ -87,11 +86,8 @@ export default function Home() {
 
   const ConnectionInfo: React.FC = () => {
     return (
-      <div className="flex flex-col items-center gap-4">
+      <div className="flex flex-row items-center gap-6">
         {gameState?.sessionUuid && <LinkInvite url={linkURL} />}
-        <Button variant="destructive" onClick={handleDisconnect}>
-          Disconnect
-        </Button>
         <PlayerList />
       </div>
     );
@@ -99,11 +95,11 @@ export default function Home() {
 
   const SessionInfo: React.FC = () => {
     return (
-      <div className=" font-bold">
+      <div className="">
         <h2>Game State:</h2>
         <p>Session UUID: {gameState.sessionUuid}</p>
         <p>Game Started: {gameState.gameStarted ? "Yes" : "No"}</p>
-        <p>Players:</p>
+        <p className="">Players:</p>
         <ul className="font-normal">
           {gameState.players.map((player) => (
             <li key={player.PlayerId}>{player.PlayerName}</li>
@@ -115,7 +111,7 @@ export default function Home() {
 
   const Title: React.FC = () => {
     return (
-      <div className="mb-12">
+      <div className="mb-6">
         <h1 className="text-center text-6xl tracking-tight ">
           <div className="font-extrabold flex justify-center items-center text-8xl gap-4 text-gray-700">
             <Image
@@ -135,33 +131,92 @@ export default function Home() {
     if (!gameState?.players) return null;
 
     return (
-      <ScrollArea className="h-48 w-48 rounded-md border">
-        <div className="p-4">
-          <h4 className="mb-4 text-sm font-medium leading-none">Players</h4>
-          {gameState.players.map((player) => (
-            <div key={"div" + player.PlayerId}>
-              <p key={player.PlayerId}>{player.PlayerName}</p>
-              <Separator key={"separator" + player.PlayerId} className="my-2" />
-            </div>
-          ))}
+      <ScrollArea className="h-28 w-48 rounded-md border">
+        <div className="p-4 flex flex-col gap-2">
+          <h4 className="font-bold leading-none">Players</h4>
+          <Separator />
+          <div>
+            {gameState.players
+              .filter((player) => player.PlayerId)
+              .map((player) => (
+                <div
+                  className="text-sm font-medium"
+                  key={"div" + player.PlayerId}
+                >
+                  <div
+                    className="flex items-center gap-4"
+                    key={player.PlayerId}
+                  >
+                    {player.PlayerName}
+                    {player.Ready ? <Check /> : <CircleEllipsis />}
+                  </div>
+                  <Separator
+                    key={"separator" + player.PlayerId}
+                    className="my-2"
+                  />
+                </div>
+              ))}
+          </div>
         </div>
       </ScrollArea>
     );
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center flex-start p-12 gap-8">
+    <main className="flex min-h-screen flex-col items-center flex-start p-6">
       <Title />
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-8 items-center">
         {!isConnected && (
-          <Button variant="default" onClick={handleConnectToWebSocket}>
-            {idQueryParam && idQueryParam != "null"
-              ? "Join Game"
-              : "Create Game"}
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="default" onClick={handleConnectToWebSocket}>
+              {idQueryParam && idQueryParam != "null"
+                ? "Join Game"
+                : "Create Game"}
+            </Button>
+          </div>
         )}
         {isConnected && <ConnectionInfo />}
-        <SessionInfo />
+        {/* <SessionInfo /> */}
+        {isConnected && (
+          <div className="flex gap-6">
+            <Button variant="destructive" onClick={handleDisconnect}>
+              Disconnect
+            </Button>
+            {!gameState.ready ? (
+              <Button
+                variant="affirmative"
+                onClick={() =>
+                  sendMessage({
+                    messageType: "playerReady",
+                    messageTimestamp: new Date().toISOString(),
+                    message: {
+                      playerId: "todo",
+                      playerReady: true,
+                    },
+                  })
+                }
+              >
+                Ready
+              </Button>
+            ) : (
+              <Button
+                variant="destructive"
+                onClick={() =>
+                  sendMessage({
+                    messageType: "playerReady",
+                    messageTimestamp: new Date().toISOString(),
+                    message: {
+                      playerId: "todo",
+                      playerReady: false,
+                    },
+                  })
+                }
+              >
+                Cancel
+              </Button>
+            )}
+          </div>
+        )}
       </div>
     </main>
   );
@@ -178,46 +233,45 @@ function UpdateGameStateFromMessage(
 
   switch (gameMessage.messageType) {
     case GameMessageTypes.PLAYER_JOINED:
-      console.log("Player joined", gameMessage.message);
-      HandlePlayerJoined(gameMessage, currentGameState, setGameState);
+      handlePlayerJoined(gameMessage, currentGameState, setGameState);
       break;
     case GameMessageTypes.PLAYER_LEFT:
-      console.log("Player left", gameMessage.message);
+      handlePlayerLeft(gameMessage, currentGameState, setGameState);
       break;
     case GameMessageTypes.SESSION_STARTED:
-      console.log("Session Started: ", gameMessage.message);
-
-      const playerObjects: Record<string, any> = gameMessage.message.players;
-      const players: Player[] = Object.values(playerObjects).map((player) => {
-        return { PlayerId: player.playerId, PlayerName: player.playerName };
-      });
-
-      setGameState((prevState) => ({
-        ...prevState,
-        sessionUuid: gameMessage.message.sessionId,
-        gameStarted: true,
-        players: players,
-      }));
-
+      handleSessionStarted(gameMessage, currentGameState, setGameState);
       break;
     case GameMessageTypes.SESSION_ENDED:
-      console.log("Game ended");
+      handleSessionEnded(gameMessage, currentGameState, setGameState);
+      break;
+    case GameMessageTypes.SESSION_INFO:
+      //handleSessionInfo(gameMessage, currentGameState, setGameState);
+      break;
+    case GameMessageTypes.PLAYER_READY:
+      handlePlayerReady(gameMessage, currentGameState, setGameState);
       break;
   }
 }
 
-function HandlePlayerJoined(
+function handlePlayerJoined(
   gameMessage: GameMessage,
   currentGameState: GameState | undefined,
   setGameState: Dispatch<SetStateAction<GameState>>
 ) {
-  if (!currentGameState?.players) return;
+  console.log("Player joined");
 
-  let players = currentGameState.players;
-  players.push({
-    PlayerId: gameMessage.message.playerId,
-    PlayerName: gameMessage.message.playerName,
-  });
+  var playerJoinedMessage: PlayerJoined = gameMessage.message as PlayerJoined;
+
+  if (!currentGameState || !playerJoinedMessage) return;
+
+  console.log(playerJoinedMessage);
+
+  // let players = currentGameState.players;
+  // players.push({
+  //   PlayerId: playerJoinedMessage.playerId,
+  //   PlayerName: playerJoinedMessage.playerName,
+  //   Ready: false,
+  // });
 
   // This is overwriting players with the old gameMessage
   setGameState((prevState) => {
@@ -228,7 +282,78 @@ function HandlePlayerJoined(
       prevState.players.push({
         PlayerId: gameMessage.message.playerId,
         PlayerName: gameMessage.message.playerName,
+        Ready: false,
       });
+    }
+    return prevState;
+  });
+}
+
+function handlePlayerLeft(
+  gameMessage: GameMessage,
+  currentGameState: GameState | undefined,
+  setGameState: Dispatch<SetStateAction<GameState>>
+) {
+  console.log("Player left", gameMessage.message);
+}
+
+function handleSessionStarted(
+  gameMessage: GameMessage,
+  currentGameState: GameState | undefined,
+  setGameState: Dispatch<SetStateAction<GameState>>
+) {
+  console.log("Session Started: ", gameMessage.message);
+  const playerObjects: Record<string, any> = gameMessage.message.players;
+  const players: Player[] = Object.values(playerObjects)
+    .filter((player) => !player.PlayerId)
+    .map((player) => {
+      return {
+        PlayerId: player.playerId,
+        PlayerName: player.playerName,
+        Ready: false,
+      };
+    });
+
+  setGameState((prevState) => ({
+    ...prevState,
+    sessionUuid: gameMessage.message.sessionId,
+    gameStarted: true,
+    players: players,
+  }));
+}
+
+function handleSessionEnded(
+  gameMessage: GameMessage,
+  currentGameState: GameState | undefined,
+  setGameState: Dispatch<SetStateAction<GameState>>
+) {
+  console.log("Session Ended: ", gameMessage.message);
+}
+
+function handleSessionInfo(
+  gameMessage: GameMessage,
+  currentGameState: GameState | undefined,
+  setGameState: Dispatch<SetStateAction<GameState>>
+) {
+  console.log("Session Info:", gameMessage.message);
+}
+
+function handlePlayerReady(
+  gameMessage: GameMessage,
+  currentGameState: GameState | undefined,
+  setGameState: Dispatch<SetStateAction<GameState>>
+) {
+  var playerReady: PlayerReady = gameMessage.message as PlayerReady;
+  console.log("Player Ready: ", playerReady);
+
+  setGameState((prevState) => {
+    console.log("Setting player as ready");
+    let player = prevState.players.find(
+      (player) => player.PlayerId === playerReady.playerId
+    );
+    if (player) {
+      console.log("Set player as ready!");
+      player.Ready = playerReady.playerReady;
     }
     return prevState;
   });
