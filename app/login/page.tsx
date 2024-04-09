@@ -45,7 +45,6 @@ const LoginPage = () => {
         }
       );
       const data = await response.json();
-      console.log(JSON.stringify(data));
       if (response.ok) {
         console.log("Login successful");
         router.push(`/?id=${idQueryParam}`);

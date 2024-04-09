@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState } from "react";
 
 interface WebSocketHook {
   socket: WebSocket | null;
@@ -29,6 +29,7 @@ export const useWebSocket = (onMessageCallback: Function): WebSocketHook => {
 
     ws.onmessage = (event) => {
       if (onMessageCallback) {
+        // TODO - Check if event.data is a Session
         onMessageCallback(JSON.parse(event.data));
       }
     };
@@ -42,7 +43,7 @@ export const useWebSocket = (onMessageCallback: Function): WebSocketHook => {
 
     if (socket.readyState === WebSocket.OPEN) {
       socket.send(JSON.stringify(data));
-      console.log("Data sent:", data);
+      console.log("Data sent: ", data, " to destination ", socket.url);
     } else {
       console.error("WebSocket connection is not open.");
     }
@@ -67,27 +68,3 @@ export const useWebSocket = (onMessageCallback: Function): WebSocketHook => {
 
   return { socket, connect, disconnect, reconnect, sendMessage };
 };
-
-// export const MessageReceiver: React.FC<{
-//   socket: WebSocket | null;
-//   onMessage: (message: string) => void;
-// }> = ({ socket, onMessage }) => {
-//   useEffect(() => {
-//     if (!socket) return;
-
-//     const handleMessage = (event: MessageEvent) => {
-//       const message = JSON.parse(event.data);
-//       onMessage(message);
-//     };
-
-//     socket.addEventListener("message", handleMessage);
-
-//     return () => {
-//       if (socket) {
-//         socket.removeEventListener("message", handleMessage);
-//       }
-//     };
-//   }, [socket, onMessage]);
-
-//   return null;
-// };
