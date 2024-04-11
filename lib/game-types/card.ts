@@ -1,4 +1,6 @@
 export type Card = {
-  CardSuit: string;
-  CardValue: string;
+  Suit: string;
+  Value: string;
 };
+
+export default Card;

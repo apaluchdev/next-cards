@@ -33,13 +33,13 @@ export class SessionMessage {
 }
 
 export class SessionStartedMessage extends SessionMessage {
-  sessionUuid: string;
+  sessionId: string;
   players: Player[];
   playerId: string;
 
-  constructor(sessionUuid: string, players: Player[], playerId: string) {
+  constructor(sessionId: string, players: Player[], playerId: string) {
     super(SessionMessageType.SESSION_STARTED);
-    this.sessionUuid = sessionUuid;
+    this.sessionId = sessionId;
     this.players = players;
     this.playerId = playerId;
   }

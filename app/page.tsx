@@ -8,14 +8,21 @@ import Image from "next/image";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/components/ui/use-toast";
-import { Check, CircleEllipsis, Delete } from "lucide-react";
+import { Check, CircleEllipsis, CircleUser, Delete } from "lucide-react";
 import { Card } from "@/lib/game-types/card";
 import { useSession } from "@/hooks/use-session";
-import { PlayerReadyMessage } from "@/lib/game-types/message";
+import {
+  CardsPlayedMessage,
+  PlayerReadyMessage,
+} from "@/lib/game-types/message";
+import { useState } from "react";
+import CardCarousel from "@/components/game-components/cheat/cheat-game";
+import { Player } from "@/lib/game-types/player";
 
 export default function Home() {
   // const { state, setState } = useAppContext();
   const router = useRouter();
+  const [renderState, setRenderState] = useState<boolean>(false);
   const searchParams = useSearchParams();
   const { toast } = useToast();
   const {
@@ -26,6 +33,14 @@ export default function Home() {
     SendMessage,
     sessionState,
   } = useSession();
+
+  console.log("Rendering main page");
+
+  function GetSelf(): Player | undefined {
+    return sessionState.players.find(
+      (p) => p.PlayerId == sessionState.playerId
+    );
+  }
 
   const idQueryParam = searchParams.get("id");
   //   router.push(`?id=${gameState.sessionUuid}`, {
@@ -104,7 +119,7 @@ export default function Home() {
     if (!sessionState?.players) return null;
 
     return (
-      <ScrollArea className="h-28 w-48 rounded-md border">
+      <ScrollArea className="h-28 w-60 rounded-md border">
         <div className="p-4 flex flex-col gap-2">
           <h4 className="font-bold leading-none">Players</h4>
           <Separator />
@@ -116,11 +131,11 @@ export default function Home() {
                   className="text-sm font-medium"
                   key={"div" + player.PlayerId}
                 >
-                  <div
-                    className="flex items-center gap-8"
-                    key={player.PlayerId}
-                  >
-                    <p className="w-24">{player.PlayerName}</p>
+                  <div className="flex items-center" key={player.PlayerId}>
+                    <div className="flex items-center gap-2 min-w-44">
+                      <CircleUser className="w-8" />
+                      <p>{player.PlayerName}</p>
+                    </div>
                     {player.Ready ? <Check /> : <CircleEllipsis />}
                   </div>
                   <Separator
@@ -136,31 +151,23 @@ export default function Home() {
   };
 
   const PlayerCards: React.FC = () => {
-    var playerCards: Card[] | undefined = sessionState.players.find(
-      (p) => p.PlayerId == sessionState.playerId
-    )?.Cards;
-
-    //console.log("1. Player cards: \n", playerCards);
+    var playerCards: Card[] =
+      sessionState.players.find((p) => p.PlayerId == sessionState.playerId)
+        ?.Cards ?? [];
 
     if (!playerCards) return null;
-
-    let output = "";
-    playerCards.forEach((card) => {
-      output += `${card.CardSuit} ${card.CardValue}\n`;
-    });
-
-    // console.log("2. Player cards:\n", output);
-    // console.log("3 Player cards:\n", playerCards);
+    console.log("Player cards: ", playerCards);
     return (
       <div>
-        {playerCards &&
-          playerCards.map((card: Card) => (
+        {playerCards
+          .filter((card) => card.Suit)
+          .map((card: Card) => (
             <div
               className="text-sm font-medium"
-              key={"div" + card.CardSuit + card.CardValue}
+              key={"div" + card.Suit + card.Value}
             >
               <p>
-                {card.CardSuit} {card.CardValue}
+                {card.Suit} {card.Value}
               </p>
             </div>
           ))}
@@ -171,7 +178,7 @@ export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center flex-start p-6">
       <Title />
-      <div className="flex flex-col gap-8 items-center">
+      <div className="flex flex-col gap-8 items-center w-full">
         {!sessionState.connected && (
           <div className="flex gap-2">
             <Button
@@ -187,7 +194,18 @@ export default function Home() {
         {sessionState.connected && <ConnectionInfo />}
         {/* <SessionInfo /> */}
         {sessionState.connected && <SessionInfo />}
-        {/* {gameState.gameStarted && <PlayerCards />} */}
+        {sessionState.gameStarted && <PlayerCards />}
+        <Button variant="default" onClick={() => setRenderState(!renderState)}>
+          Re-Render
+        </Button>
+        <CardCarousel
+          playingCards={GetSelf()?.Cards ?? []}
+          cardsSelectedCallback={(cards: Card[]) =>
+            SendMessage(
+              new CardsPlayedMessage(GetSelf()?.PlayerId ?? "", cards, "")
+            )
+          }
+        />
       </div>
     </main>
   );

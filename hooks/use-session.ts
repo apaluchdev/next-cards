@@ -1,5 +1,5 @@
 import { Player } from "@/lib/game-types/player";
-import React, { useState, useEffect, Dispatch, SetStateAction } from "react";
+import { useState } from "react";
 import { useWebSocket } from "./use-websocket";
 import {
   CardsDealtMessage,
@@ -29,10 +29,7 @@ interface SessionHook {
 }
 
 // Custom hook to manage properties common to all sessions
-
-// THIS HOOK SHOULD USE USE-WEBSOCKET instead of the component itself
 export const useSession = (): SessionHook => {
-  // Ensure you recreate the sessionState using ...sessionState, or else re-render won't be triggered
   const [sessionState, setSessionState] = useState<SessionState>({
     players: [],
     sessionUuid: "",
@@ -151,7 +148,7 @@ export const useSession = (): SessionHook => {
 
     setSessionState((prevState) => ({
       ...prevState,
-      sessionUuid: sessionStartedMsg.sessionUuid,
+      sessionUuid: sessionStartedMsg.sessionId,
       gameStarted: false,
       players: players,
       playerId: sessionStartedMsg.playerId,
@@ -202,7 +199,7 @@ export const useSession = (): SessionHook => {
       if (player) {
         player.Cards = cardsDealtMsg.cards;
       }
-      return prevState;
+      return { ...prevState };
     });
   };
 

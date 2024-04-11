@@ -23,7 +23,7 @@ const formSchema = z.object({
 
 const LoginPage = () => {
   const router = useRouter();
-  const { state, setState } = useAppContext();
+  //const { state, setState } = useAppContext();
   const searchParams = useSearchParams();
 
   const idQueryParam = searchParams.get("id");
@@ -34,9 +34,11 @@ const LoginPage = () => {
     },
   });
 
+  console.log("Rendering login page");
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      setState({ name: values.username, score: 0, session: "" });
+      //setState({ name: values.username, score: 0, session: "" });
       const response = await fetch(
         `http://localhost:8080/auth/login?username=${values.username}`,
         {
@@ -47,7 +49,8 @@ const LoginPage = () => {
       const data = await response.json();
       if (response.ok) {
         console.log("Login successful");
-        router.push(`/?id=${idQueryParam}`);
+        if (idQueryParam) router.push(`/?id=${idQueryParam}`);
+        else router.push("/");
       } else {
         console.log("Login error");
       }
