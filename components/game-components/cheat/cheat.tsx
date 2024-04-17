@@ -10,6 +10,7 @@ import {
   DeclaredCheatMessage,
   PlayerTurnMessage,
 } from "@/lib/game-types/cheat/cheat-message";
+import { useAppContext } from "@/context/app-context";
 
 interface CheatProps {
   Session: Session;
@@ -25,6 +26,8 @@ export type CheatState = {
 
 // Need to register an event handler to a event provided by Session
 const Cheat: React.FC<CheatProps> = ({ Session }) => {
+  const { messageQueue, publishMessage, subscribe, unsubscribe } =
+    useAppContext();
   const [cheatState, setCheatState] = useState<CheatState>({
     cheatPlayers: [],
     canDeclareCheat: false,
@@ -40,6 +43,7 @@ const Cheat: React.FC<CheatProps> = ({ Session }) => {
   }
 
   const cheatMessageHandler = (message: SessionMessage) => {
+    console.log("Cheat received a message", message);
     switch (message.messageInfo.messageType) {
       case SessionMessageType.GAME_STARTED:
         handleGameStarted(message);
@@ -59,17 +63,13 @@ const Cheat: React.FC<CheatProps> = ({ Session }) => {
     }
   };
 
-  // useEffect(() => {
-  //   subscribeSessionMessageEvent((message: SessionMessage) =>
-  //     cheatMessageHandler(message)
-  //   );
-  //   return () => {
-  //     unsubscribeSessionMessageEvent((message: SessionMessage) =>
-  //       cheatMessageHandler(message)
-  //     );
-  //   };
-  // }, [Session]); // Causes a memory leak but fixes the issue
-  // The event handlers are somehow keeping an "old" state of the Session object
+  useEffect(() => {
+    console.log("Cheat has subscribed to the context");
+    subscribe(cheatMessageHandler);
+    return () => {
+      unsubscribe(cheatMessageHandler);
+    };
+  }, []);
 
   const handleGameStarted = (gameMessage: SessionMessage) => {
     console.log("The current state of session is ", Session.sessionState);

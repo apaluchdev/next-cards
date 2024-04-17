@@ -28,7 +28,7 @@ export interface Session {
 
 // Custom hook to manage properties common to all sessions
 export const useSession = (): Session => {
-  //const { state: sesState, setState: setSesState } = useAppContext();
+  const { messageQueue, publishMessage, subscribe } = useAppContext();
   const [sessionState, setSessionState] = useState<SessionState>({
     users: [],
     sessionId: "",
@@ -102,6 +102,9 @@ export const useSession = (): Session => {
         });
         break;
     }
+
+    console.log("use-session published message to context");
+    publishMessage(message);
 
     // if (sesState.fruit) {
     //   console.log("Fruit is: ", sesState.fruit);
