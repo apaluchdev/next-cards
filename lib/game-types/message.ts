@@ -1,5 +1,4 @@
-import { Card } from "./card";
-import { Player } from "./player";
+import { User } from "./user";
 
 // export interface SessionMessage {
 //   messageType: GameMessageType;
@@ -7,15 +6,17 @@ import { Player } from "./player";
 // }
 
 export enum SessionMessageType {
-  PLAYER_JOINED = "playerJoined",
-  PLAYER_LEFT = "playerLeft",
+  USER_JOINED = "userJoined",
+  USER_LEFT = "userLeft",
   SESSION_STARTED = "sessionStarted",
   GAME_STARTED = "gameStarted",
   SESSION_ENDED = "sessionEnded",
   SESSION_INFO = "sessionInfo",
-  PLAYER_READY = "playerReady",
+  USER_READY = "userReady",
   CARDS_DEALT = "cardsDealt",
   CARDS_PLAYED = "cardsPlayed",
+  PLAYER_TURN = "userTurn",
+  DECLARED_CHEAT = "declaredCheat",
 }
 
 export class SessionMessage {
@@ -34,14 +35,14 @@ export class SessionMessage {
 
 export class SessionStartedMessage extends SessionMessage {
   sessionId: string;
-  players: Player[];
-  playerId: string;
+  users: User[];
+  userId: string;
 
-  constructor(sessionId: string, players: Player[], playerId: string) {
+  constructor(sessionId: string, users: User[], userId: string) {
     super(SessionMessageType.SESSION_STARTED);
     this.sessionId = sessionId;
-    this.players = players;
-    this.playerId = playerId;
+    this.users = users;
+    this.userId = userId;
   }
 }
 
@@ -54,68 +55,44 @@ export class SessionEndedMessage extends SessionMessage {
   }
 }
 
-export class PlayerJoinedMessage extends SessionMessage {
-  playerId: string;
-  playerName: string;
+export class UserJoinedMessage extends SessionMessage {
+  userId: string;
+  userName: string;
 
-  constructor(playerId: string, playerName: string) {
-    super(SessionMessageType.PLAYER_JOINED);
-    this.playerId = playerId;
-    this.playerName = playerName;
+  constructor(userId: string, userName: string) {
+    super(SessionMessageType.USER_JOINED);
+    this.userId = userId;
+    this.userName = userName;
   }
 }
 
 export class GameStartedMessage extends SessionMessage {
-  playerId: string;
-  playerName: string;
+  userId: string;
+  userName: string;
 
-  constructor(playerId: string, playerName: string) {
+  constructor(userId: string, userName: string) {
     super(SessionMessageType.GAME_STARTED);
-    this.playerId = playerId;
-    this.playerName = playerName;
+    this.userId = userId;
+    this.userName = userName;
   }
 }
 
-export class PlayerLeftMessage extends SessionMessage {
-  playerId: string;
+export class UserLeftMessage extends SessionMessage {
+  userId: string;
 
-  constructor(playerId: string) {
-    super(SessionMessageType.PLAYER_LEFT);
-    this.playerId = playerId;
+  constructor(userId: string) {
+    super(SessionMessageType.USER_LEFT);
+    this.userId = userId;
   }
 }
 
-export class PlayerReadyMessage extends SessionMessage {
-  playerId: string;
-  playerReady: boolean;
+export class UserReadyMessage extends SessionMessage {
+  userId: string;
+  userReady: boolean;
 
-  constructor(playerId: string, playerReady: boolean) {
-    super(SessionMessageType.PLAYER_READY);
-    this.playerId = playerId;
-    this.playerReady = playerReady;
-  }
-}
-
-export class CardsDealtMessage extends SessionMessage {
-  playerId: string;
-  cards: Card[];
-
-  constructor(playerId: string, cards: Card[]) {
-    super(SessionMessageType.CARDS_DEALT);
-    this.playerId = playerId;
-    this.cards = cards;
-  }
-}
-
-export class CardsPlayedMessage extends SessionMessage {
-  playerId: string;
-  cards: Card[];
-  targetId: string;
-
-  constructor(playerId: string, cards: Card[], targetId: string) {
-    super(SessionMessageType.CARDS_PLAYED);
-    this.playerId = playerId;
-    this.cards = cards;
-    this.targetId = targetId;
+  constructor(userId: string, userReady: boolean) {
+    super(SessionMessageType.USER_READY);
+    this.userId = userId;
+    this.userReady = userReady;
   }
 }

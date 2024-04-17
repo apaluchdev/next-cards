@@ -1,25 +1,23 @@
-import { Player } from "@/lib/game-types/player";
+import { User } from "@/lib/game-types/user";
 import { useState } from "react";
 import { useWebSocket } from "./use-websocket";
 import {
-  CardsDealtMessage,
-  CardsPlayedMessage,
-  PlayerJoinedMessage,
-  PlayerReadyMessage,
+  UserJoinedMessage,
+  UserReadyMessage,
   SessionMessage,
   SessionMessageType,
   SessionStartedMessage,
 } from "@/lib/game-types/message";
+import { useAppContext } from "@/context/app-context";
 
 export type SessionState = {
-  players: Player[];
-  sessionUuid: string;
-  gameStarted: boolean;
+  users: User[];
+  sessionId: string;
   connected: boolean;
-  playerId: string;
+  userId: string;
 };
 
-interface SessionHook {
+export interface Session {
   ConnectSession: (id: string) => string;
   DisconnectSession: () => void;
   UpdateSession: (url: SessionMessage) => void;
@@ -29,16 +27,18 @@ interface SessionHook {
 }
 
 // Custom hook to manage properties common to all sessions
-export const useSession = (): SessionHook => {
+export const useSession = (): Session => {
+  //const { state: sesState, setState: setSesState } = useAppContext();
   const [sessionState, setSessionState] = useState<SessionState>({
-    players: [],
-    sessionUuid: "",
-    gameStarted: false,
+    users: [],
+    sessionId: "",
     connected: false,
-    playerId: "",
+    userId: "",
   });
   const { socket, connect, disconnect, reconnect, sendMessage } = useWebSocket(
-    (message: any) => UpdateSession(message)
+    (message: any) => {
+      UpdateSession(message);
+    }
   );
 
   const ConnectSession = (id: string) => {
@@ -67,11 +67,10 @@ export const useSession = (): SessionHook => {
 
   const CleanSession = () => {
     setSessionState({
-      players: [],
-      sessionUuid: "",
-      gameStarted: false,
+      users: [],
+      sessionId: "",
       connected: false,
-      playerId: "",
+      userId: "",
     });
   };
 
@@ -79,17 +78,14 @@ export const useSession = (): SessionHook => {
     console.log("Message Received: ", message);
 
     switch (message.messageInfo.messageType) {
-      case SessionMessageType.PLAYER_JOINED:
-        handlePlayerJoined(message);
+      case SessionMessageType.USER_JOINED:
+        handleUserJoined(message);
         break;
-      case SessionMessageType.PLAYER_LEFT:
-        handlePlayerLeft(message);
+      case SessionMessageType.USER_LEFT:
+        handleUserLeft(message);
         break;
       case SessionMessageType.SESSION_STARTED:
         handleSessionStarted(message);
-        break;
-      case SessionMessageType.GAME_STARTED:
-        handleGameStarted(message);
         break;
       case SessionMessageType.SESSION_ENDED:
         handleSessionEnded(message);
@@ -97,68 +93,65 @@ export const useSession = (): SessionHook => {
       case SessionMessageType.SESSION_INFO:
         handleSessionInfo(message);
         break;
-      case SessionMessageType.PLAYER_READY:
-        handlePlayerReady(message);
+      case SessionMessageType.USER_READY:
+        handleUserReady(message);
         break;
-      case SessionMessageType.CARDS_DEALT:
-        handleCardsDealt(message);
+      default:
+        setSessionState((prevState) => {
+          return { ...prevState };
+        });
         break;
     }
+
+    // if (sesState.fruit) {
+    //   console.log("Fruit is: ", sesState.fruit);
+    // }
   };
 
-  const handlePlayerJoined = (gameMessage: SessionMessage) => {
-    var playerJoinedMessage = gameMessage as PlayerJoinedMessage;
+  const handleUserJoined = (gameMessage: SessionMessage) => {
+    var userJoinedMessage = gameMessage as UserJoinedMessage;
 
-    if (!playerJoinedMessage) return;
+    if (!userJoinedMessage) return;
 
     setSessionState((prevState) => {
-      const playerExists = prevState.players.some(
-        (player) => player.PlayerId === playerJoinedMessage.playerId
+      const userExists = prevState.users.some(
+        (user) => user.UserId === userJoinedMessage.userId
       );
-      if (!playerExists) {
-        prevState.players.push({
-          PlayerId: playerJoinedMessage.playerId,
-          PlayerName: playerJoinedMessage.playerName,
+      if (!userExists) {
+        prevState.users.push({
+          UserId: userJoinedMessage.userId,
+          UserName: userJoinedMessage.userName,
           Ready: false,
-          Cards: [],
         });
       }
       return { ...prevState };
     });
   };
 
-  const handlePlayerLeft = (gameMessage: SessionMessage) => {
-    console.log("Handling player left");
+  const handleUserLeft = (gameMessage: SessionMessage) => {
+    console.log("Handling user left");
   };
 
   const handleSessionStarted = (gameMessage: SessionMessage) => {
     var sessionStartedMsg = gameMessage as SessionStartedMessage;
     console.log("Handling session started", sessionStartedMsg);
-    const playerObjects: Record<string, any> = sessionStartedMsg.players;
-    const players: Player[] = Object.values(playerObjects)
-      .filter((player) => !player.PlayerId)
-      .map((player) => {
+    const userObjects: Record<string, any> = sessionStartedMsg.users;
+    const users: User[] = Object.values(userObjects)
+      .filter((user) => !user.UserId)
+      .map((user) => {
         return {
-          PlayerId: player.playerId,
-          PlayerName: player.playerName,
-          Ready: player.playerReady,
-          Cards: [],
+          UserId: user.userId,
+          UserName: user.userName,
+          Ready: user.ready,
         };
       });
 
     setSessionState((prevState) => ({
       ...prevState,
-      sessionUuid: sessionStartedMsg.sessionId,
+      sessionId: sessionStartedMsg.sessionId,
       gameStarted: false,
-      players: players,
-      playerId: sessionStartedMsg.playerId,
-    }));
-  };
-
-  const handleGameStarted = (gameMessage: SessionMessage) => {
-    setSessionState((prevState) => ({
-      ...prevState,
-      gameStarted: true,
+      users: users,
+      userId: sessionStartedMsg.userId,
     }));
   };
 
@@ -172,40 +165,20 @@ export const useSession = (): SessionHook => {
     console.log("Session Info:", gameMessage);
   };
 
-  const handlePlayerReady = (gameMessage: SessionMessage) => {
-    var playerReadyMsg = gameMessage as PlayerReadyMessage;
-
+  const handleUserReady = (gameMessage: SessionMessage) => {
+    var userReadyMsg = gameMessage as UserReadyMessage;
     setSessionState((prevState) => {
-      let player = prevState.players.find(
-        (player) => player.PlayerId === playerReadyMsg.playerId
+      let user = prevState.users.find(
+        (user) => user.UserId === userReadyMsg.userId
       );
 
-      // Update the player's ready status
-      if (player) {
-        player.Ready = playerReadyMsg.playerReady;
+      // Update the user's ready status
+      if (user) {
+        user.Ready = userReadyMsg.userReady;
       }
 
       return { ...prevState };
     });
-  };
-
-  const handleCardsDealt = (gameMessage: SessionMessage) => {
-    var cardsDealtMsg = gameMessage as CardsDealtMessage;
-    setSessionState((prevState) => {
-      var player = prevState.players.find(
-        (p) => p.PlayerId === cardsDealtMsg.playerId
-      );
-
-      if (player) {
-        player.Cards = cardsDealtMsg.cards;
-      }
-      return { ...prevState };
-    });
-  };
-
-  const handleCardsPlayed = (gameMessage: SessionMessage) => {
-    var cardsPlayedMsg = gameMessage as CardsPlayedMessage;
-    console.log("Handling cards played", cardsPlayedMsg);
   };
 
   return {

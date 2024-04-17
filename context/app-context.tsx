@@ -1,16 +1,19 @@
 "use client";
 
+import { User } from "@/lib/game-types/user";
 import { createContext, useContext, useState } from "react";
 
-type UserGameData = {
-  name: string | undefined;
-  score: number | undefined;
-  session: string | undefined;
+type AppContext = {
+  state: SessionState2;
+  setState: React.Dispatch<React.SetStateAction<SessionState2>>;
 };
 
-type AppContext = {
-  state: UserGameData | null;
-  setState: React.Dispatch<React.SetStateAction<UserGameData | null>>;
+export type SessionState2 = {
+  users: User[];
+  sessionId: string;
+  connected: boolean;
+  userId: string;
+  fruit: string;
 };
 
 export const AppContext = createContext<AppContext | null>(null);
@@ -20,13 +23,15 @@ export function AppContextProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const [state, setState] = useState<UserGameData | null>({
-    name: "",
-    score: 0,
-    session: "",
+  const [sesState, setSesState] = useState<SessionState2>({
+    users: [],
+    sessionId: "",
+    connected: false,
+    userId: "",
+    fruit: "apple",
   }); // Update the type of setState
   return (
-    <AppContext.Provider value={{ state, setState }}>
+    <AppContext.Provider value={{ state: sesState, setState: setSesState }}>
       {" "}
       {children}
     </AppContext.Provider>

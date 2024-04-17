@@ -38,7 +38,6 @@ export const useWebSocket = (onMessageCallback: Function): WebSocketHook => {
   };
 
   const sendMessage = (data: Object) => {
-    console.log("Attempting to send message...");
     if (!socket) return;
 
     if (socket.readyState === WebSocket.OPEN) {

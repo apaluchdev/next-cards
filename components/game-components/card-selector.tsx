@@ -8,12 +8,12 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import PlayingCard from "@/lib/game-types/card";
-import { Button } from "../../ui/button";
-import CheatCards from "./cheat-cards";
+import { Button } from "../ui/button";
 import { GetSuitSymbol } from "@/lib/game-types/card-helper";
+import { Session } from "@/hooks/use-session";
 
-interface CardCarouselProps {
-  playingCards: PlayingCard[];
+interface CardSelectorProps {
+  Cards: PlayingCard[];
   cardsSelectedCallback: (card: PlayingCard[]) => void;
 }
 
@@ -39,51 +39,15 @@ const sortByCardValue = (a: PlayingCard, b: PlayingCard) => {
   return aValueIndex - bValueIndex;
 };
 
-const CardCarousel: React.FC<CardCarouselProps> = ({
-  playingCards,
+const CardSelector: React.FC<CardSelectorProps> = ({
+  Cards,
   cardsSelectedCallback,
 }) => {
-  playingCards = [
-    {
-      Suit: "Clubs",
-      Value: "6",
-    },
-    {
-      Suit: "Spades",
-      Value: "3",
-    },
-    {
-      Suit: "Diamonds",
-      Value: "5",
-    },
-    {
-      Suit: "Hearts",
-      Value: "5",
-    },
-    {
-      Suit: "Diamonds",
-      Value: "Q",
-    },
-    {
-      Suit: "Diamonds",
-      Value: "4",
-    },
-    {
-      Suit: "Hearts",
-      Value: "J",
-    },
-    {
-      Suit: "Diamonds",
-      Value: "7",
-    },
-  ];
-
   const [selCards, setSelCards] = useState<PlayingCard[]>([]);
+  const playingCards = Cards;
 
   const isCardSelected = (card: PlayingCard) => {
     if (selCards.length < 1) return false;
-
-    console.log("Selected cards: ", selCards);
 
     return selCards.some(
       (c: PlayingCard) => c.Suit === card.Suit && c.Value === card.Value
@@ -102,7 +66,12 @@ const CardCarousel: React.FC<CardCarouselProps> = ({
     }
   };
 
-  cardsSelectedCallback(selCards);
+  if (!playingCards)
+    return (
+      <div>
+        <h1>No Cards!</h1>
+      </div>
+    );
 
   return (
     <div className="flex flex-col items-center w-full gap-6">
@@ -145,11 +114,14 @@ const CardCarousel: React.FC<CardCarouselProps> = ({
       {/* <CheatCards
         onCardClick={() => GetSelected(playingCard)}
       /> */}
-      <Button variant={"default"} onClick={() => setSelCards([])}>
+      <Button
+        variant={"default"}
+        onClick={() => cardsSelectedCallback(selCards)}
+      >
         Play Cards
       </Button>
     </div>
   );
 };
 
-export default CardCarousel;
+export default CardSelector;
