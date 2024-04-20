@@ -11,13 +11,12 @@ import { Check, CircleEllipsis, CircleUser, Delete } from "lucide-react";
 import { useSession } from "@/hooks/use-session";
 import { UserReadyMessage } from "@/lib/game-types/message";
 import Cheat from "@/components/game-components/cheat/cheat";
-import { useAppContext } from "@/context/app-context";
 
 export default function Home() {
   //const { state: sesState, setState: setSesState } = useAppContext();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { toast } = useToast();
+  //const { toast } = useToast();
   const session = useSession();
 
   const idQueryParam = searchParams.get("id");

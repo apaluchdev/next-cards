@@ -16,7 +16,6 @@ import {
 } from "@/components/ui/form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useAppContext } from "@/context/app-context";
 const formSchema = z.object({
   username: z.string().min(2).max(50),
 });

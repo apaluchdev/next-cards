@@ -10,7 +10,7 @@ import {
   DeclaredCheatMessage,
   PlayerTurnMessage,
 } from "@/lib/game-types/cheat/cheat-message";
-import { useAppContext } from "@/context/app-context";
+import { useSessionContext } from "@/context/session-context";
 
 interface CheatProps {
   Session: Session;
@@ -26,8 +26,13 @@ export type CheatState = {
 
 // Need to register an event handler to a event provided by Session
 const Cheat: React.FC<CheatProps> = ({ Session }) => {
-  const { messageQueue, publishMessage, subscribe, unsubscribe } =
-    useAppContext();
+  const {
+    messageQueue,
+    sessionContext,
+    publishMessage,
+    subscribe,
+    unsubscribe,
+  } = useSessionContext();
   const [cheatState, setCheatState] = useState<CheatState>({
     cheatPlayers: [],
     canDeclareCheat: false,
@@ -35,6 +40,17 @@ const Cheat: React.FC<CheatProps> = ({ Session }) => {
     playerTurnId: undefined,
     gameStarted: false,
   });
+
+  // useEffect(() => {
+  //   setCheatState((prevState) => ({
+  //     ...prevState,
+  //     cheatPlayers: Session.sessionState.users.map((user) => ({
+  //       User: user,
+  //       Cards: [],
+  //       CardsPlayed: [],
+  //     })),
+  //   }));
+  // }, []);
 
   function GetSelf(): CheatPlayer | undefined {
     return cheatState.cheatPlayers.find(

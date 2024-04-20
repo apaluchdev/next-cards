@@ -1,5 +1,5 @@
 import { User } from "@/lib/game-types/user";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useWebSocket } from "./use-websocket";
 import {
   UserJoinedMessage,
@@ -8,7 +8,7 @@ import {
   SessionMessageType,
   SessionStartedMessage,
 } from "@/lib/game-types/message";
-import { useAppContext } from "@/context/app-context";
+import { useSessionContext } from "@/context/session-context";
 
 export type SessionState = {
   users: User[];
@@ -28,7 +28,8 @@ export interface Session {
 
 // Custom hook to manage properties common to all sessions
 export const useSession = (): Session => {
-  const { messageQueue, publishMessage, subscribe } = useAppContext();
+  const { messageQueue, publishMessage, subscribe, setSessionContext } =
+    useSessionContext();
   const [sessionState, setSessionState] = useState<SessionState>({
     users: [],
     sessionId: "",
@@ -40,6 +41,10 @@ export const useSession = (): Session => {
       UpdateSession(message);
     }
   );
+
+  useEffect(() => {
+    setSessionContext(sessionState);
+  }, []);
 
   const ConnectSession = (id: string) => {
     try {
@@ -102,13 +107,7 @@ export const useSession = (): Session => {
         });
         break;
     }
-
-    console.log("use-session published message to context");
     publishMessage(message);
-
-    // if (sesState.fruit) {
-    //   console.log("Fruit is: ", sesState.fruit);
-    // }
   };
 
   const handleUserJoined = (gameMessage: SessionMessage) => {
