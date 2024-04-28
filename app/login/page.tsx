@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -20,7 +19,7 @@ const formSchema = z.object({
   username: z.string().min(2).max(50),
 });
 
-const LoginPage = () => {
+const LoginPage: React.FC = () => {
   const router = useRouter();
   //const { state, setState } = useAppContext();
   const searchParams = useSearchParams();

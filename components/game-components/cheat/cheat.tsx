@@ -309,7 +309,7 @@ const Cheat = () => {
       <div>
         <h1 className="font-bold text-xl">
           {turnName}
-          's Turn
+          {"'s Turn"}
         </h1>
       </div>
       {cheatState.playerInstruction && (
