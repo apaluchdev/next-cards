@@ -8,13 +8,14 @@ import {
   SessionMessageType,
   SessionStartedMessage,
 } from "@/lib/game-types/message";
-import { useSessionContext } from "@/context/session-context";
 
 export type SessionState = {
   users: User[];
   sessionId: string;
   connected: boolean;
   userId: string;
+  open: boolean;
+  gameStarted: boolean;
 };
 
 export interface Session {
@@ -26,15 +27,21 @@ export interface Session {
   sessionState: SessionState;
 }
 
+type OnMessageCallback = (sessionMsg: SessionMessage) => void;
+type OnSessionUpdatedCallback = (session: Session) => void;
+
 // Custom hook to manage properties common to all sessions
-export const useSession = (): Session => {
-  const { messageQueue, publishMessage, subscribe, setSessionContext } =
-    useSessionContext();
+export const useSession = (
+  onMessageCallback: OnMessageCallback,
+  onSessionUpdatedCallback: OnSessionUpdatedCallback
+): Session => {
   const [sessionState, setSessionState] = useState<SessionState>({
     users: [],
     sessionId: "",
     connected: false,
     userId: "",
+    open: false,
+    gameStarted: false,
   });
   const { socket, connect, disconnect, reconnect, sendMessage } = useWebSocket(
     (message: any) => {
@@ -43,8 +50,8 @@ export const useSession = (): Session => {
   );
 
   useEffect(() => {
-    setSessionContext(sessionState);
-  }, []);
+    onSessionUpdatedCallback({ ...Session, sessionState: sessionState });
+  }, [sessionState]);
 
   const ConnectSession = (id: string) => {
     try {
@@ -76,11 +83,14 @@ export const useSession = (): Session => {
       sessionId: "",
       connected: false,
       userId: "",
+      open: false,
+      gameStarted: false,
     });
   };
 
   const UpdateSession = (message: SessionMessage) => {
     console.log("Message Received: ", message);
+    onMessageCallback(message);
 
     switch (message.messageInfo.messageType) {
       case SessionMessageType.USER_JOINED:
@@ -101,13 +111,15 @@ export const useSession = (): Session => {
       case SessionMessageType.USER_READY:
         handleUserReady(message);
         break;
+      case SessionMessageType.GAME_STARTED:
+        handleGameStarted(message);
+        break;
       default:
         setSessionState((prevState) => {
           return { ...prevState };
         });
         break;
     }
-    publishMessage(message);
   };
 
   const handleUserJoined = (gameMessage: SessionMessage) => {
@@ -144,7 +156,7 @@ export const useSession = (): Session => {
         return {
           UserId: user.userId,
           UserName: user.userName,
-          Ready: user.ready,
+          Ready: user.userReady,
         };
       });
 
@@ -154,6 +166,7 @@ export const useSession = (): Session => {
       gameStarted: false,
       users: users,
       userId: sessionStartedMsg.userId,
+      open: true,
     }));
   };
 
@@ -183,7 +196,13 @@ export const useSession = (): Session => {
     });
   };
 
-  return {
+  const handleGameStarted = (gameMessage: SessionMessage) => {
+    setSessionState((prevState) => {
+      return { ...prevState, open: false, gameStarted: true };
+    });
+  };
+
+  const Session = {
     ConnectSession,
     DisconnectSession,
     UpdateSession,
@@ -191,4 +210,6 @@ export const useSession = (): Session => {
     SendMessage,
     sessionState,
   };
+
+  return Session;
 };

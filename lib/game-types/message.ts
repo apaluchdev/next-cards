@@ -15,8 +15,9 @@ export enum SessionMessageType {
   USER_READY = "userReady",
   CARDS_DEALT = "cardsDealt",
   CARDS_PLAYED = "cardsPlayed",
-  PLAYER_TURN = "userTurn",
+  PLAYER_TURN = "playerTurn",
   DECLARED_CHEAT = "declaredCheat",
+  CHEAT_RESULT = "cheatResult",
 }
 
 export class SessionMessage {

@@ -7,44 +7,22 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import PlayingCard from "@/lib/game-types/card";
+import PlayingCard, { sortByCardValue } from "@/lib/game-types/card";
 import { Button } from "../ui/button";
 import { GetSuitSymbol } from "@/lib/game-types/card-helper";
-import { Session } from "@/hooks/use-session";
 
 interface CardSelectorProps {
-  Cards: PlayingCard[];
+  playingCards: PlayingCard[];
   cardsSelectedCallback: (card: PlayingCard[]) => void;
+  isViewOnly: boolean;
 }
 
-const cardValuesOrder = [
-  "2",
-  "3",
-  "4",
-  "5",
-  "6",
-  "7",
-  "8",
-  "9",
-  "10",
-  "J",
-  "Q",
-  "K",
-  "A",
-];
-
-const sortByCardValue = (a: PlayingCard, b: PlayingCard) => {
-  const aValueIndex = cardValuesOrder.indexOf(a.Value);
-  const bValueIndex = cardValuesOrder.indexOf(b.Value);
-  return aValueIndex - bValueIndex;
-};
-
 const CardSelector: React.FC<CardSelectorProps> = ({
-  Cards,
+  playingCards,
   cardsSelectedCallback,
+  isViewOnly,
 }) => {
   const [selCards, setSelCards] = useState<PlayingCard[]>([]);
-  const playingCards = Cards;
 
   const isCardSelected = (card: PlayingCard) => {
     if (selCards.length < 1) return false;
@@ -111,10 +89,8 @@ const CardSelector: React.FC<CardSelectorProps> = ({
         <CarouselPrevious />
         <CarouselNext />
       </Carousel>
-      {/* <CheatCards
-        onCardClick={() => GetSelected(playingCard)}
-      /> */}
       <Button
+        disabled={isViewOnly}
         variant={"default"}
         onClick={() => cardsSelectedCallback(selCards)}
       >

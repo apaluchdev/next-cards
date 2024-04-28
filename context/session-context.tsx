@@ -1,16 +1,15 @@
 "use client";
 
-import { SessionState } from "@/hooks/use-session";
+import { Session, SessionState, useSession } from "@/hooks/use-session";
 import { SessionMessage } from "@/lib/game-types/message";
 import { createContext, useContext, useEffect, useState } from "react";
 
 type SessionContext = {
+  session: Session;
   messageQueue: SessionMessage[];
-  sessionContext: SessionState;
   publishMessage: (newMsg: SessionMessage) => void;
   subscribe: (subscriber: Function) => void;
   unsubscribe: (subscriber: Function) => void;
-  setSessionContext: (sessionContext: SessionState) => void;
 };
 
 export const SessionContext = createContext<SessionContext | null>(null);
@@ -21,11 +20,8 @@ export function SessionContextProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const [messageQueue, setMessageQueue] = useState<SessionMessage[]>([]); // Update the type of setState
+  const [messageQueue, setMessageQueue] = useState<SessionMessage[]>([]);
   const [subscribers, setSubscribers] = useState<Function[]>([]);
-  const [sessionContext, setSessionContext] = useState<SessionState>(
-    {} as SessionState
-  );
 
   const subscribe = (subscriber: Function) => {
     setSubscribers((prevSubscribers) => [...prevSubscribers, subscriber]);
@@ -41,23 +37,30 @@ export function SessionContextProvider({
     setMessageQueue((prevMsgs) => [...prevMsgs, newMsg]);
   };
 
+  const onSessionUpdated = (updatedSession: Session) => {
+    setSession(updatedSession);
+  };
+
   useEffect(() => {
     if (messageQueue.length > 0) {
       var msg = messageQueue[0];
       setMessageQueue((prevMsgs) => prevMsgs.slice(1));
-      subscribers.forEach((subscriber) => subscriber(msg));
+      subscribers.forEach((subscriber) => subscriber(msg, session));
     }
   }, [messageQueue, subscribers]);
+
+  const [session, setSession] = useState<Session>(
+    useSession(publishMessage, onSessionUpdated)
+  );
 
   return (
     <SessionContext.Provider
       value={{
+        session,
         messageQueue,
-        sessionContext,
         publishMessage,
         subscribe,
         unsubscribe,
-        setSessionContext,
       }}
     >
       {" "}

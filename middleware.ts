@@ -9,8 +9,9 @@ export function middleware(request: NextRequest) {
   if (
     !request.cookies.get("userId")?.value ||
     !request.cookies.get("username")?.value
-  )
+  ) {
     return NextResponse.redirect(new URL(loginUrl, request.url));
+  }
 }
 
 // See "Matching Paths" below to learn more
