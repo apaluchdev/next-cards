@@ -11,22 +11,14 @@ import { UserReadyMessage } from "@/lib/game-types/message";
 import Cheat from "@/components/game-components/cheat/cheat";
 import { useSessionContext } from "@/context/session-context";
 import Link from "next/link";
+import { Suspense } from "react";
 
 export default function Home() {
-  //const { state: sesState, setState: setSesState } = useAppContext();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { session } = useSessionContext();
 
-  const idQueryParam = searchParams.get("id");
-  //   router.push(`?id=${gamesessionState.sessionUuid}`, {
-  //     scroll: false,
-  //   });
-
-  console.log("Rendering session");
-
   const linkURL = session.sessionState?.sessionId
-    ? `localhost:3000?id=${session.sessionState?.sessionId}` // TODO this should be the url param
+    ? `localhost:3000?id=${session.sessionState?.sessionId}`
     : "localhost:3000";
 
   const handleDisconnect = () => {
@@ -38,17 +30,20 @@ export default function Home() {
 
   const ConnectionInfo: React.FC = () => {
     return (
-      <div className="flex flex-row items-start gap-6">
-        {session.sessionState?.sessionId &&
-          !session.sessionState.gameStarted && <LinkInvite url={linkURL} />}
-        <PlayerList />
+      <div className="flex flex-col gap-2">
+        <div className="flex flex-row items-start gap-6">
+          {session.sessionState?.sessionId &&
+            !session.sessionState.gameStarted && <LinkInvite url={linkURL} />}
+          <PlayerList />
+        </div>
+        {!session.sessionState.gameStarted && <ReadyUpButton />}
       </div>
     );
   };
 
   const ReadyUpButton: React.FC = () => {
     return (
-      <div>
+      <div className="flex justify-end">
         {!session.sessionState.users.find(
           (u) => u.UserId == session.sessionState.userId
         )?.Ready ? (
@@ -74,17 +69,6 @@ export default function Home() {
             Cancel
           </Button>
         )}
-      </div>
-    );
-  };
-
-  const SessionInfo: React.FC = () => {
-    return (
-      <div className="flex justify-end">
-        {/* <Button variant="destructive" onClick={handleDisconnect}>
-          Disconnect
-        </Button> */}
-        {!session.sessionState.gameStarted && <ReadyUpButton />}
       </div>
     );
   };
@@ -138,26 +122,36 @@ export default function Home() {
     );
   };
 
+  const ConnectButton: React.FC = () => {
+    const searchParams = useSearchParams();
+    const idQueryParam = searchParams.get("id");
+    console.log("Error msg: ", session?.sessionState?.errorMsg);
+    return (
+      <div className="flex flex-col items-center justify-center">
+        <Button
+          variant="default"
+          onClick={() => session.ConnectSession(idQueryParam || "")}
+        >
+          {idQueryParam && idQueryParam != "null" ? "Join Game" : "Create Game"}
+        </Button>
+        <h1 className="mt-6 font-bold text-red-600 text-xl">
+          {session?.sessionState?.errorMsg && session?.sessionState?.errorMsg}
+        </h1>
+      </div>
+    );
+  };
+
   return (
     <main className="flex min-h-screen flex-col items-center flex-start p-6">
       <Title />
       <div className="flex flex-col gap-8 items-center w-full">
-        {!session.sessionState.connected && (
-          <div className="flex gap-2">
-            <Button
-              variant="default"
-              onClick={() => session.ConnectSession(idQueryParam || "")}
-            >
-              {idQueryParam && idQueryParam != "null"
-                ? "Join Game"
-                : "Create Game"}
-            </Button>
-          </div>
-        )}
-        {session.sessionState.connected && (
+        {!session.sessionState.connected ? (
+          <Suspense>
+            <ConnectButton />
+          </Suspense>
+        ) : (
           <div className="flex flex-col gap-4 min-w-[800px] items-center">
             <ConnectionInfo />
-            <SessionInfo />
             <Cheat />
           </div>
         )}

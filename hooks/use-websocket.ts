@@ -9,7 +9,10 @@ interface WebSocketHook {
 }
 
 // Custom hook to manage WebSocket connection
-export const useWebSocket = (onMessageCallback: Function): WebSocketHook => {
+export const useWebSocket = (
+  onMessageCallback: Function,
+  onErrorCallback: Function
+): WebSocketHook => {
   const [socket, setSocket] = useState<WebSocket | null>(null);
 
   const connect = (url: string) => {
@@ -25,6 +28,11 @@ export const useWebSocket = (onMessageCallback: Function): WebSocketHook => {
 
     ws.onopen = () => {
       console.log("WebSocket connected");
+    };
+
+    ws.onerror = (error: Event) => {
+      onErrorCallback("An error occurred");
+      console.error("WebSocket error: ", error); // TODO - Show a generic error to the user
     };
 
     ws.onmessage = (event) => {

@@ -28,6 +28,7 @@ export type CheatState = {
   cheatWinner: string | undefined;
   cheatLoser: string | undefined;
   discardPileSize: number;
+  cheatHand: PlayingCard[];
 };
 
 // Need to register an event handler to a event provided by Session
@@ -167,6 +168,7 @@ const Cheat = () => {
         ...prevState,
         cheatWinner: cheatResultMsg.winnerId,
         cheatLoser: cheatResultMsg.loserId,
+        cheatHand: cheatResultMsg.cards,
       };
     });
   };
@@ -273,6 +275,7 @@ const Cheat = () => {
       );
     }
 
+    // Cheat Results
     if (cheatState.playerDeclaredCheatId) {
       return (
         <div>
@@ -288,6 +291,8 @@ const Cheat = () => {
             {GetCheatPlayerById(cheatState.cheatLoser ?? "Loser Username")?.User
               .UserName ?? "Loser Username"}
           </h3>
+          <h1>Cards Played:</h1>
+          <CardViewer playingCards={cheatState.cheatHand} />
         </div>
       );
     }

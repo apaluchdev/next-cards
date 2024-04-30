@@ -54,10 +54,12 @@ export class DeclaredCheatMessage extends SessionMessage {
 export class CheatResultMessage extends SessionMessage {
   winnerId: string;
   loserId: string;
+  cards: Card[];
 
-  constructor(winnerId: string, loserId: string) {
+  constructor(winnerId: string, loserId: string, cards: Card[]) {
     super(SessionMessageType.CHEAT_RESULT);
     this.winnerId = winnerId;
     this.loserId = loserId;
+    this.cards = cards;
   }
 }

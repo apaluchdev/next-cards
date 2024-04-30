@@ -16,6 +16,7 @@ export type SessionState = {
   userId: string;
   open: boolean;
   gameStarted: boolean;
+  errorMsg: string;
 };
 
 export interface Session {
@@ -42,10 +43,16 @@ export const useSession = (
     userId: "",
     open: false,
     gameStarted: false,
+    errorMsg: "",
   });
   const { socket, connect, disconnect, reconnect, sendMessage } = useWebSocket(
     (message: any) => {
       UpdateSession(message);
+    },
+    (error: any) => {
+      setSessionState((prevState) => {
+        return { ...prevState, errorMsg: error };
+      });
     }
   );
 
@@ -56,11 +63,12 @@ export const useSession = (
   const ConnectSession = (id: string) => {
     try {
       var result: boolean = id
-        ? connect(`ws://localhost:8080/session/connect?id=${id}`)
-        : connect("ws://localhost:8080/session/connect");
+        ? connect(
+            `${process.env.NEXT_PUBLIC_GO_BACKEND_WS}/session/connect?id=${id}`
+          )
+        : connect(`${process.env.NEXT_PUBLIC_GO_BACKEND_WS}/session/connect`);
 
-      if (result) setSessionState({ ...sessionState, connected: true });
-      else setSessionState({ ...sessionState, connected: false });
+      if (!result) setSessionState({ ...sessionState, connected: false });
     } catch (error) {
       console.error("Error connecting to WebSocket", error);
     }
@@ -85,6 +93,7 @@ export const useSession = (
       userId: "",
       open: false,
       gameStarted: false,
+      errorMsg: "",
     });
   };
 
@@ -166,6 +175,7 @@ export const useSession = (
       gameStarted: false,
       users: users,
       userId: sessionStartedMsg.userId,
+      connected: true,
       open: true,
     }));
   };
