@@ -1,13 +1,14 @@
 import { User } from "@/lib/game-types/user";
 import { useEffect, useState } from "react";
 import { useWebSocket } from "./use-websocket";
-import {
-  UserJoinedMessage,
-  UserReadyMessage,
-  SessionMessage,
-  SessionMessageType,
-  SessionStartedMessage,
-} from "@/lib/game-types/message";
+import { UserJoinedMessage, UserReadyMessage, SessionMessage, SessionMessageType, SessionStartedMessage } from "@/lib/game-types/message";
+
+export enum SessionStatus {
+  DISCONNECTED = "DISCONNECTED",
+  WAITING_FOR_PLAYERS = "WAITING_FOR_PLAYERS",
+  GAME_STARTED = "GAME_STARTED",
+  ERROR = "ERROR",
+}
 
 export type SessionState = {
   users: User[];
@@ -17,6 +18,7 @@ export type SessionState = {
   open: boolean;
   gameStarted: boolean;
   errorMsg: string;
+  sessionStatus: SessionStatus;
 };
 
 export interface Session {
@@ -25,17 +27,14 @@ export interface Session {
   UpdateSession: (url: SessionMessage) => void;
   CleanSession: () => void;
   SendMessage: (data: SessionMessage) => void;
+  SetSessionState: (sessionState: SessionState) => void;
   sessionState: SessionState;
 }
 
 type OnMessageCallback = (sessionMsg: SessionMessage) => void;
-type OnSessionUpdatedCallback = (session: Session) => void;
 
 // Custom hook to manage properties common to all sessions
-export const useSession = (
-  onMessageCallback: OnMessageCallback,
-  onSessionUpdatedCallback: OnSessionUpdatedCallback
-): Session => {
+export const useSession = (onMessageCallback: OnMessageCallback): Session => {
   const [sessionState, setSessionState] = useState<SessionState>({
     users: [],
     sessionId: "",
@@ -44,6 +43,7 @@ export const useSession = (
     open: false,
     gameStarted: false,
     errorMsg: "",
+    sessionStatus: SessionStatus.DISCONNECTED,
   });
   const { socket, connect, disconnect, reconnect, sendMessage } = useWebSocket(
     (message: any) => {
@@ -56,17 +56,11 @@ export const useSession = (
     }
   );
 
-  useEffect(() => {
-    onSessionUpdatedCallback({ ...Session, sessionState: sessionState });
-  }, [sessionState]);
-
   const ConnectSession = (id: string) => {
     try {
       var result: boolean = id
-        ? connect(
-            `${process.env.NEXT_PUBLIC_GO_BACKEND_WS}/session/connect?id=${id}`
-          )
-        : connect(`${process.env.NEXT_PUBLIC_GO_BACKEND_WS}/session/connect`);
+        ? connect(`ws://${process.env.NEXT_PUBLIC_GO_BACKEND}/session/connect?id=${id}`)
+        : connect(`ws://${process.env.NEXT_PUBLIC_GO_BACKEND}/session/connect`);
 
       if (!result) setSessionState({ ...sessionState, connected: false });
     } catch (error) {
@@ -74,6 +68,10 @@ export const useSession = (
     }
 
     return id;
+  };
+
+  const SetSessionState = (sessionState: SessionState) => {
+    setSessionState(sessionState);
   };
 
   const DisconnectSession = () => {
@@ -94,6 +92,7 @@ export const useSession = (
       open: false,
       gameStarted: false,
       errorMsg: "",
+      sessionStatus: SessionStatus.DISCONNECTED,
     });
   };
 
@@ -137,9 +136,7 @@ export const useSession = (
     if (!userJoinedMessage) return;
 
     setSessionState((prevState) => {
-      const userExists = prevState.users.some(
-        (user) => user.UserId === userJoinedMessage.userId
-      );
+      const userExists = prevState.users.some((user) => user.UserId === userJoinedMessage.userId);
       if (!userExists) {
         prevState.users.push({
           UserId: userJoinedMessage.userId,
@@ -176,6 +173,7 @@ export const useSession = (
       users: users,
       userId: sessionStartedMsg.userId,
       connected: true,
+      sessionStatus: SessionStatus.WAITING_FOR_PLAYERS,
       open: true,
     }));
   };
@@ -193,9 +191,7 @@ export const useSession = (
   const handleUserReady = (gameMessage: SessionMessage) => {
     var userReadyMsg = gameMessage as UserReadyMessage;
     setSessionState((prevState) => {
-      let user = prevState.users.find(
-        (user) => user.UserId === userReadyMsg.userId
-      );
+      let user = prevState.users.find((user) => user.UserId === userReadyMsg.userId);
 
       // Update the user's ready status
       if (user) {
@@ -208,7 +204,7 @@ export const useSession = (
 
   const handleGameStarted = (gameMessage: SessionMessage) => {
     setSessionState((prevState) => {
-      return { ...prevState, open: false, gameStarted: true };
+      return { ...prevState, open: false, gameStarted: true, sessionStatus: SessionStatus.GAME_STARTED };
     });
   };
 
@@ -218,6 +214,7 @@ export const useSession = (
     UpdateSession,
     CleanSession,
     SendMessage,
+    SetSessionState,
     sessionState,
   };
 

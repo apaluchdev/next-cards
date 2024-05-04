@@ -1,21 +1,15 @@
 import { Session } from "@/hooks/use-session";
 import { SessionMessage, SessionMessageType } from "@/lib/game-types/message";
 import React, { useEffect, useState } from "react";
-import CardSelector from "../card-selector";
 import PlayingCard from "@/lib/game-types/card";
 import { CheatPlayer } from "@/lib/game-types/cheat/cheat-player";
-import {
-  CardsDealtMessage,
-  CardsPlayedMessage,
-  CheatResultMessage,
-  DeclaredCheatMessage,
-  PlayerTurnMessage,
-} from "@/lib/game-types/cheat/cheat-message";
+import { CardsDealtMessage, CardsPlayedMessage, CheatResultMessage, DeclaredCheatMessage, PlayerTurnMessage } from "@/lib/game-types/cheat/cheat-message";
 import { useSessionContext } from "@/context/session-context";
 import { Button } from "@/components/ui/button";
 import CardViewer from "../card-viewer";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { WaitingForCheatTimer } from "./cheat-timer";
+import { CardHand } from "../card-hand";
 
 export type CheatState = {
   gameStarted: boolean;
@@ -45,12 +39,9 @@ const Cheat = () => {
     return cheatState.cheatPlayers.find((p) => p.User.UserId === playerId);
   };
 
-  const playerSelf = cheatState?.cheatPlayers?.find(
-    (p) => p.User.UserId === cheatState.selfId
-  );
+  const playerSelf = cheatState?.cheatPlayers?.find((p) => p.User.UserId === cheatState.selfId);
   const myTurn = cheatState.playerTurnId === cheatState.selfId;
-  const turnName = GetCheatPlayerById(cheatState.playerTurnId ?? "")?.User
-    .UserName;
+  const turnName = GetCheatPlayerById(cheatState.playerTurnId ?? "")?.User.UserName;
 
   const cheatMessageHandler = (message: SessionMessage, session: Session) => {
     switch (message.messageInfo.messageType) {
@@ -83,6 +74,7 @@ const Cheat = () => {
   }, []);
 
   const handleGameStarted = (gameMessage: SessionMessage, session: Session) => {
+    console.log("Handling Game Started");
     setCheatState((prevState) => ({
       ...prevState,
       gameStarted: true,
@@ -101,20 +93,13 @@ const Cheat = () => {
       let newState = { ...prevState };
 
       // State updates must be idempotent
-      let player = newState.cheatPlayers.find(
-        (p) => p.User.UserId === cardsDealtMsg.playerId
-      );
+      let player = newState.cheatPlayers.find((p) => p.User.UserId === cardsDealtMsg.playerId);
 
       if (!player) return prevState;
 
       // Add the card if not found in the player's hand
       cardsDealtMsg.cards.forEach((dealtCard) => {
-        if (
-          !player?.Cards.find(
-            (c) => c.Suit === dealtCard.Suit && c.Value === dealtCard.Value
-          )
-        )
-          player.Cards.push(dealtCard);
+        if (!player?.Cards.find((c) => c.Suit === dealtCard.Suit && c.Value === dealtCard.Value)) player.Cards.push(dealtCard);
       });
 
       return newState;
@@ -124,9 +109,7 @@ const Cheat = () => {
   const handleCardsPlayed = (gameMessage: SessionMessage) => {
     var cardsPlayedMsg = gameMessage as CardsPlayedMessage;
     setCheatState((prevState) => {
-      var player = prevState.cheatPlayers.find(
-        (p) => p.User.UserId === cardsPlayedMsg.playerId
-      );
+      var player = prevState.cheatPlayers.find((p) => p.User.UserId === cardsPlayedMsg.playerId);
 
       if (player) {
         player.CardsPlayed = cardsPlayedMsg.cards;
@@ -173,36 +156,29 @@ const Cheat = () => {
     });
   };
 
+  const handleCardHandPlayed = (cards: PlayingCard[]) => {
+    session.SendMessage(new CardsPlayedMessage(session.sessionState.userId ?? "", cards, ""));
+    setCheatState((prevState) => {
+      var player = prevState.cheatPlayers.find((p) => p.User.UserId === session.sessionState.userId);
+
+      if (player) {
+        player.Cards = player.Cards.filter((c) => !cards.some((card) => card.Suit === c.Suit && card.Value === c.Value));
+      }
+      return { ...prevState, waitingForCheat: true };
+    });
+  };
+
   if (!cheatState.gameStarted) {
     return <div>Game not started</div>;
   }
 
   const CardPicker: React.FC = () => {
     return (
-      <CardSelector
+      <CardHand
         playingCards={playerSelf?.Cards ?? []}
-        cardsSelectedCallback={(cards: PlayingCard[]) => {
-          session.SendMessage(
-            new CardsPlayedMessage(session.sessionState.userId ?? "", cards, "")
-          );
-          // Take away the cards from the player
-          setCheatState((prevState) => {
-            var player = prevState.cheatPlayers.find(
-              (p) => p.User.UserId === session.sessionState.userId
-            );
-
-            if (player) {
-              player.Cards = player.Cards.filter(
-                (c) =>
-                  !cards.some(
-                    (card) => card.Suit === c.Suit && card.Value === c.Value
-                  )
-              );
-            }
-            return { ...prevState, waitingForCheat: true };
-          });
-        }}
+        canSelect={true}
         isViewOnly={!myTurn || cheatState.waitingForCheat}
+        cardsSelectedCallback={(cards: PlayingCard[]) => handleCardHandPlayed(cards)}
       />
     );
   };
@@ -211,40 +187,24 @@ const Cheat = () => {
     if (!myTurn)
       return (
         <div className="w-full flex flex-col items-center">
-          <h1>{turnName} supposedly played:</h1>
-          <CardViewer
-            playingCards={
-              GetCheatPlayerById(cheatState.playerTurnId ?? "")?.CardsPlayed ??
-              []
-            }
-          />
+          <h1 className="text-xl tracking-tighter font-semibold">{turnName} played:</h1>
+          <CardViewer playingCards={GetCheatPlayerById(cheatState.playerTurnId ?? "")?.CardsPlayed ?? []} />
 
           <Button
             onClick={() => {
-              session.SendMessage(
-                new DeclaredCheatMessage(session.sessionState.userId ?? "")
-              );
+              session.SendMessage(new DeclaredCheatMessage(session.sessionState.userId ?? ""));
             }}
           >
             Declare Cheat
           </Button>
         </div>
       );
-    else
-      return (
-        <div className="w-full flex items-center text-2xl font-bold justify-center mt-6">
-          Waiting for possible cheat declarations...
-        </div>
-      );
+    else return <div className="w-full flex items-center text-2xl font-bold justify-center mt-6">Waiting for possible cheat declarations...</div>;
   };
 
   const GetCurrentCheatView = () => {
     // Win State
-    if (
-      !myTurn &&
-      !cheatState.waitingForCheat &&
-      (playerSelf?.Cards.length ?? 0) < 1
-    ) {
+    if (!myTurn && !cheatState.waitingForCheat && (playerSelf?.Cards.length ?? 0) < 1) {
       return (
         <div className="w-full flex item-center justify-center mt-6">
           <h1 className="font-bold text-4xl">YOU WIN</h1>
@@ -253,13 +213,9 @@ const Cheat = () => {
     }
 
     // Picking cards to play
-    if (
-      myTurn &&
-      !cheatState.waitingForCheat &&
-      !cheatState.playerDeclaredCheatId
-    ) {
+    if (myTurn && !cheatState.waitingForCheat && !cheatState.playerDeclaredCheatId) {
       return (
-        <div className="mt-6">
+        <div className="mt-6 max-w-screen-lg">
           <CardPicker />
         </div>
       );
@@ -283,13 +239,11 @@ const Cheat = () => {
 
           <h3 className=" text-green-700 font-semibold text-xl">
             {"Winner: "}
-            {GetCheatPlayerById(cheatState.cheatWinner ?? "Winner UserName")
-              ?.User.UserName ?? "Winner Username"}
+            {GetCheatPlayerById(cheatState.cheatWinner ?? "Winner UserName")?.User.UserName ?? "Winner Username"}
           </h3>
           <h3 className="text-red-700 font-semibold text-xl">
             {"Loser: "}
-            {GetCheatPlayerById(cheatState.cheatLoser ?? "Loser Username")?.User
-              .UserName ?? "Loser Username"}
+            {GetCheatPlayerById(cheatState.cheatLoser ?? "Loser Username")?.User.UserName ?? "Loser Username"}
           </h3>
           <h1>Cards Played:</h1>
           <CardViewer playingCards={cheatState.cheatHand} />

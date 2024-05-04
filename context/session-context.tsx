@@ -1,46 +1,38 @@
 "use client";
 
-import { Session, SessionState, useSession } from "@/hooks/use-session";
+import { Session, useSession } from "@/hooks/use-session";
 import { SessionMessage } from "@/lib/game-types/message";
 import { createContext, useContext, useEffect, useState } from "react";
 
+// Wraps a session and provides components with the ability to subscribe to changes in the session
 type SessionContext = {
   session: Session;
-  messageQueue: SessionMessage[];
-  publishMessage: (newMsg: SessionMessage) => void;
   subscribe: (subscriber: Function) => void;
   unsubscribe: (subscriber: Function) => void;
 };
 
 export const SessionContext = createContext<SessionContext | null>(null);
 
-// TODO - maybe this should just use the use-session hook directly, and eliminate the need for an expo
-export function SessionContextProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export function SessionContextProvider({ children }: { children: React.ReactNode }) {
   const [messageQueue, setMessageQueue] = useState<SessionMessage[]>([]);
   const [subscribers, setSubscribers] = useState<Function[]>([]);
 
+  // Subscribe to changes in the session
   const subscribe = (subscriber: Function) => {
     setSubscribers((prevSubscribers) => [...prevSubscribers, subscriber]);
   };
 
+  // Unsubscribe from changes in the session
   const unsubscribe = (subscriber: Function) => {
-    setSubscribers((prevSubscribers) =>
-      prevSubscribers.filter((sub) => sub !== subscriber)
-    );
+    setSubscribers((prevSubscribers) => prevSubscribers.filter((sub) => sub !== subscriber));
   };
 
+  // Publish a message to the message queue
   const publishMessage = (newMsg: SessionMessage) => {
     setMessageQueue((prevMsgs) => [...prevMsgs, newMsg]);
   };
 
-  const onSessionUpdated = (updatedSession: Session) => {
-    setSession(updatedSession);
-  };
-
+  // Whenever a message is added to the message queue, publish it to all subscribers
   useEffect(() => {
     if (messageQueue.length > 0) {
       var msg = messageQueue[0];
@@ -49,21 +41,17 @@ export function SessionContextProvider({
     }
   }, [messageQueue, subscribers]);
 
-  const [session, setSession] = useState<Session>(
-    useSession(publishMessage, onSessionUpdated)
-  );
+  // Maintain a session state
+  const session = useSession(publishMessage);
 
   return (
     <SessionContext.Provider
       value={{
         session,
-        messageQueue,
-        publishMessage,
         subscribe,
         unsubscribe,
       }}
     >
-      {" "}
       {children}
     </SessionContext.Provider>
   );
@@ -72,9 +60,7 @@ export function SessionContextProvider({
 export function useSessionContext() {
   const context = useContext(SessionContext);
   if (!context) {
-    throw new Error(
-      "useSessionContext must be used within a SessionContextProvider"
-    );
+    throw new Error("useSessionContext must be used within a SessionContextProvider");
   }
   return context;
 }
