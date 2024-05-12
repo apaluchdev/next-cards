@@ -7,25 +7,23 @@ import { SessionContextProvider } from "@/context/session-context";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Go Cards",
-  description: "Card game with friends",
+    title: "Go Cards",
+    description: "Card game with friends",
 };
 
 export default function RootLayout({
-  children,
+    children,
 }: Readonly<{
-  children: React.ReactNode;
+    children: React.ReactNode;
 }>) {
-  return (
-    <html lang="en">
-      <SessionContextProvider>
-        <body className={inter.className}>
-          {children}
-          <footer className="p-2 fixed bottom-0 opacity-50">
-            Created by Adrian Paluch
-          </footer>
-        </body>
-      </SessionContextProvider>
-    </html>
-  );
+    return (
+        <html lang="en">
+            <SessionContextProvider>
+                <body className={inter.className}>
+                    {children}
+                    <footer className="p-2 fixed bottom-0 opacity-50">Created by Adrian Paluch</footer>
+                </body>
+            </SessionContextProvider>
+        </html>
+    );
 }

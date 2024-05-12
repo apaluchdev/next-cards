@@ -37,7 +37,7 @@ const Login = () => {
     try {
       //setState({ name: values.username, score: 0, session: "" });
       const response = await fetch(
-        `http://localhost:8080/auth/login?username=${values.username}`,
+        `http://${process.env.NEXT_PUBLIC_GO_BACKEND}/auth/login?username=${values.username}`,
         {
           method: "POST",
           credentials: "include",
