@@ -1,19 +1,25 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
-
 trigger:
-- master
+  branches:
+    include:
+      - main
 
-pool:
-  vmImage: ubuntu-latest
+pool: Adrian-PC
 
 steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
-
 - script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+    echo "##[debug] System Default Working Directory: $(System.DefaultWorkingDirectory)"
+    echo "##[debug] Build Artifact Staging Directory: $(Build.ArtifactStagingDirectory)"
+    dir
+- task: CopyFiles@2
+  inputs:
+    TargetFolder: '$(Build.ArtifactStagingDirectory)'
+- task: PublishBuildArtifacts@1
+  inputs:
+     artifactName: drop
+- task: Docker@2
+  inputs:
+    containerRegistry: 'GoCheatContainerRegistry'
+    repository: 'GoCheatServer'
+    command: 'buildAndPush'
+    Dockerfile: '**/Dockerfile'
+    tags: 'latest'
