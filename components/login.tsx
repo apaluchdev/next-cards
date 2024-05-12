@@ -28,7 +28,7 @@ const Login = () => {
     async function onSubmit(values: z.infer<typeof formSchema>) {
         try {
             //setState({ name: values.username, score: 0, session: "" });
-            const response = await fetch(`http://${process.env.NEXT_PUBLIC_GO_BACKEND}/auth/login?username=${values.username}`, {
+            const response = await fetch(`https://${process.env.NEXT_PUBLIC_GO_BACKEND}/auth/login?username=${values.username}`, {
                 method: "POST",
                 credentials: "include",
             });
