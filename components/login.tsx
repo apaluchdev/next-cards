@@ -27,6 +27,7 @@ const Login = () => {
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
         try {
+            console.log("Attempting to login...");
             //setState({ name: values.username, score: 0, session: "" });
             const response = await fetch(`https://${process.env.NEXT_PUBLIC_GO_BACKEND}/auth/login?username=${values.username}`, {
                 method: "POST",
