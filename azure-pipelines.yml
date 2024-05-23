@@ -22,13 +22,4 @@ steps:
     repository: 'GoCheatClient'
     command: 'buildAndPush'
     Dockerfile: '**/Dockerfile'
-    tags: '$(Build.BuildId)'
-- task: AzureWebAppContainer@1
-  inputs:
-    azureSubscription: 'Azure subscription 1(36ed3de6-9239-4dbf-92c7-9ec5f09a2323)'
-    appName: 'GoCheat'
-    deployToSlotOrASE: true
-    resourceGroupName: 'GoCheat'
-    slotName: 'production'
-    containers: 'gocheatregistry.azurecr.io/gocheatclient:$(Build.BuildId)'
-    appSettings: '-GO_CHEAT_CLIENT_DOMAIN https://gocheat.azurewebsites.net -NEXT_PUBLIC_DOMAIN gocheat.azurewebsites.net -NEXT_PUBLIC_GO_BACKEND gocheatserver.azurewebsites.net'
+    tags: 'latest'
