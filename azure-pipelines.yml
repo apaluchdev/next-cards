@@ -31,4 +31,4 @@ steps:
     resourceGroupName: 'GoCheat'
     slotName: 'production'
     containers: 'gocheatregistry.azurecr.io/gocheatclient:$(Build.BuildId)'
-    appSettings: '-GO_CHEAT_CLIENT_DOMAIN https://gocheat.azurewebsites.net'
+    appSettings: '-GO_CHEAT_CLIENT_DOMAIN https://gocheat.azurewebsites.net -NEXT_PUBLIC_DOMAIN gocheat.azurewebsites.net -NEXT_PUBLIC_GO_BACKEND gocheatserver.azurewebsites.net'
