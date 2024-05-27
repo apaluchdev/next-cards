@@ -8,6 +8,7 @@ import { Input } from "./ui/input";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { Button } from "./ui/button";
+import { SetCookie } from "@/app/server-actions/set-cookie";
 
 const formSchema = z.object({
     username: z.string().min(2).max(50),
@@ -28,14 +29,25 @@ const Login = () => {
     async function onSubmit(values: z.infer<typeof formSchema>) {
         try {
             console.log("Attempting to login...");
-            //setState({ name: values.username, score: 0, session: "" });
-            const response = await fetch(`https://${process.env.NEXT_PUBLIC_GO_BACKEND}/auth/login?username=${values.username}`, {
+            let url = `${process.env.NEXT_PUBLIC_USE_HTTP == "true" ? "http:" : "https:"}//${process.env.NEXT_PUBLIC_GO_BACKEND}/auth/login?username=${
+                values.username
+            }`;
+
+            const response = await fetch(url, {
                 method: "POST",
                 credentials: "include",
             });
+
             const data = await response.json();
+
             if (response.ok) {
                 console.log("Login successful");
+
+                // Save the token to local storage
+                localStorage.setItem("authorization", data.token);
+
+                await SetCookie("authorization", data.token, new Date(Date.now() + 60 * 60 * 24 * 7 * 1000));
+                // If the id query param exists, redirect to the game with the id
                 if (idQueryParam) router.push(`/?id=${idQueryParam}`);
                 else router.push("/");
             } else {

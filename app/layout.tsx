@@ -18,12 +18,10 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en">
-            <SessionContextProvider>
-                <body className={inter.className}>
-                    {children}
-                    <footer className="p-2 fixed bottom-0 opacity-50">v1.0.1 - Created by Adrian Paluch</footer>
-                </body>
-            </SessionContextProvider>
+            <body className={inter.className}>
+                {children}
+                <footer className="p-2 fixed bottom-0 opacity-50">v1.0.1 - Created by Adrian Paluch</footer>
+            </body>
         </html>
     );
 }

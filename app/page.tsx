@@ -1,12 +1,6 @@
-"use client";
-
-import { CardHand } from "@/components/game-components/card-hand";
-import Cheat from "@/components/game-components/cheat/cheat";
-import { Session } from "@/components/session";
-import { useSessionContext } from "@/context/session-context";
-import { MockCards } from "@/lib/game-types/card-helper";
 import Link from "next/link";
 import Image from "next/image";
+import Game from "@/components/game-components/game";
 
 export default function Home() {
     const Title: React.FC = () => {
@@ -27,9 +21,7 @@ export default function Home() {
     return (
         <main className="flex min-h-screen flex-col items-center flex-start p-4 bg-slate-50">
             <Title />
-            <Session>
-                <Cheat />
-            </Session>
+            <Game />
             {/* <CardHand playingCards={MockCards} isViewOnly={false} canSelect={true} cardsSelectedCallback={() => console.log("Cards Selected")} /> */}
         </main>
     );

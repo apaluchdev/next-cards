@@ -1,3 +1,5 @@
+"use client";
+
 import { Session } from "@/hooks/use-session";
 import { SessionMessage, SessionMessageType } from "@/lib/game-types/message";
 import React, { useEffect, useState } from "react";
@@ -6,7 +8,6 @@ import { CheatPlayer } from "@/lib/game-types/cheat/cheat-player";
 import { CardsDealtMessage, CardsPlayedMessage, CheatResultMessage, DeclaredCheatMessage, PlayerTurnMessage } from "@/lib/game-types/cheat/cheat-message";
 import { useSessionContext } from "@/context/session-context";
 import { Button } from "@/components/ui/button";
-import CardViewer from "../card-viewer";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { WaitingForCheatTimer } from "./cheat-timer";
 import { CardHand } from "../card-hand";
@@ -26,7 +27,7 @@ export type CheatState = {
 };
 
 // Need to register an event handler to a event provided by Session
-const Cheat = () => {
+const Cheat: React.FC = ({}) => {
     const { session, subscribe, unsubscribe } = useSessionContext();
     const [cheatState, setCheatState] = useState<CheatState>({
         discardPileSize: 0,

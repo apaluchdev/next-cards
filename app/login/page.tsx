@@ -2,11 +2,11 @@ import Login from "@/components/login";
 import { Suspense } from "react";
 
 const LoginPage: React.FC = () => {
-  return (
-    <Suspense>
-      <Login />
-    </Suspense>
-  );
+    return (
+        <Suspense>
+            <Login />
+        </Suspense>
+    );
 };
 
 export default LoginPage;

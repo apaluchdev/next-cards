@@ -1,3 +1,5 @@
+"use client";
+
 import React, { ReactNode, Suspense } from "react";
 import { ScrollArea } from "./ui/scroll-area";
 import { Separator } from "./ui/separator";
@@ -11,10 +13,11 @@ import { SessionStatus } from "@/hooks/use-session";
 import { LoadingSpinner } from "./ui/loading-spinner";
 
 interface SessionProps {
+    authToken: string;
     children: ReactNode; // ReactNode is used to indicate that children can be any React node
 }
 
-export const Session: React.FC<SessionProps> = ({ children }) => {
+export const Session: React.FC<SessionProps> = ({ children, authToken }) => {
     const { session } = useSessionContext();
     const linkURL = session.sessionState?.sessionId
         ? `${process.env.NEXT_PUBLIC_DOMAIN}?id=${session.sessionState?.sessionId}`
@@ -71,7 +74,7 @@ export const Session: React.FC<SessionProps> = ({ children }) => {
         const idQueryParam = searchParams.get("id");
         return (
             <div className="flex flex-col items-center justify-center">
-                <Button variant="default" onClick={() => session.ConnectSession(idQueryParam || "")}>
+                <Button variant="default" onClick={async () => await session.ConnectSession(idQueryParam || "", authToken)}>
                     {idQueryParam && idQueryParam != "null" ? "Join Game" : "Create Game"}
                 </Button>
                 <h1 className="mt-6 font-bold text-red-600 text-xl">{session?.sessionState?.errorMsg && session?.sessionState?.errorMsg}</h1>
