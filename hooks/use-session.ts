@@ -59,7 +59,7 @@ export const useSession = (onMessageCallback: OnMessageCallback): Session => {
     const ConnectSession = async (id: string, authToken: string) => {
         try {
             var result = await fetch(
-                `${process.env.NEXT_PUBLIC_USE_HTTP == "true" ? "http:" : "https:"}//${process.env.NEXT_PUBLIC_GO_BACKEND}/session/ticket`,
+                `${process.env.NEXT_PUBLIC_USE_HTTP == "true" ? "http" : "https"}://${process.env.NEXT_PUBLIC_GO_BACKEND}/session/ticket`,
                 {
                     method: "POST",
                     body: JSON.stringify({ authToken: authToken }),
@@ -73,8 +73,16 @@ export const useSession = (onMessageCallback: OnMessageCallback): Session => {
             console.log(data);
 
             var isConnected: boolean = id
-                ? connect(`ws://${process.env.NEXT_PUBLIC_GO_BACKEND}/session/connect?id=${id}&ticket=${data.ticket}`)
-                : connect(`ws://${process.env.NEXT_PUBLIC_GO_BACKEND}/session/connect?ticket=${data.ticket}`);
+                ? connect(
+                      `${process.env.NEXT_PUBLIC_USE_HTTP == "true" ? "ws" : "wss"}://${process.env.NEXT_PUBLIC_GO_BACKEND}/session/connect?id=${id}&ticket=${
+                          data.ticket
+                      }`
+                  )
+                : connect(
+                      `${process.env.NEXT_PUBLIC_USE_HTTP == "true" ? "ws" : "wss"}://${process.env.NEXT_PUBLIC_GO_BACKEND}/session/connect?ticket=${
+                          data.ticket
+                      }`
+                  );
 
             if (!isConnected) setSessionState({ ...sessionState, connected: false });
         } catch (error) {
