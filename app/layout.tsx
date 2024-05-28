@@ -20,7 +20,7 @@ export default function RootLayout({
         <html lang="en">
             <body className={inter.className}>
                 {children}
-                <footer className="p-2 fixed bottom-0 opacity-50">v1.0.2 - Created by Adrian Paluch</footer>
+                <footer className="p-2 fixed bottom-0 opacity-50">v1.0.3 - Created by Adrian Paluch</footer>
             </body>
         </html>
     );
