@@ -29,3 +29,15 @@ steps:
     appName: 'GoCheat'
     resourceGroupName: 'GoCheat'
     containers: 'gocheatregistry.azurecr.io/gocheatclient:latest'
+- task: AzureContainerApps@1
+  inputs:
+    azureSubscription: 'Azure subscription 1(36ed3de6-9239-4dbf-92c7-9ec5f09a2323)'
+    acrName: 'GoCheatRegistry'
+    acrUsername: 'GoCheatRegistry'
+    # acrPassword: ''
+    imageToBuild: 'gocheatregistry.azurecr.io/gocheatclient:latest'
+    resourceGroup: 'GoCheat'
+    targetPort: '3000'
+    environmentVariables: 'NEXT_PUBLIC_DOMAIN=gocheatapp.canadacentral.azurecontainer.io NEXT_PUBLIC_GO_BACKEND=gocheatappserver.canadacentral.azurecontainer.io'
+    ingress: 'internal'
+
