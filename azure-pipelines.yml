@@ -35,7 +35,8 @@ steps:
     containerAppName: 'gocheatcontainerapp'
     resourceGroup: 'GoCheat'
     imageToDeploy: 'gocheatregistry.azurecr.io/gocheatclient:latest'
+    acrName: 'GoCheatRegistry'
     acrUsername: 'GoCheatRegistry'
     acrPassword: $(acrPassword)
-    containerAppEnvironment: 'gocheat-env'
+
     
