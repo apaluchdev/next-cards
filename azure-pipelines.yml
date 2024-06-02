@@ -40,3 +40,4 @@ steps:
     acrName: 'gocheatregistry'
     acrUsername: 'GoCheatRegistry'
     acrPassword: $(acrPassword)
+    targetPort: '3000'
