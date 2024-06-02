@@ -30,12 +30,12 @@ steps:
 #     appName: 'GoCheat'
 #     resourceGroupName: 'GoCheat'
 #     containers: 'gocheatregistry.azurecr.io/gocheatclient:latest'
-# - task: AzureContainerApps@1
-#   inputs:
-#     azureSubscription: 'GoCheatServiceConnection'
-#     containerAppName: 'gocheatcontainerapp'
-#     resourceGroup: 'GoCheat'
-#     imageToDeploy: 'gocheatregistry.azurecr.io/gocheatclient:latest'
-#     acrName: 'GoCheatRegistry'
-#     acrUsername: 'GoCheatRegistry'
-#     acrPassword: $(acrPassword)
+- task: AzureContainerApps@1
+  inputs:
+    azureSubscription: 'GoCheatServiceConnection'
+    containerAppName: 'gocheatcontainerapp'
+    resourceGroup: 'GoCheat'
+    imageToDeploy: 'gocheatregistry.azurecr.io/gocheatclient:latest'
+    acrName: 'GoCheatRegistry'
+    acrUsername: 'GoCheatRegistry'
+    acrPassword: $(acrPassword)
