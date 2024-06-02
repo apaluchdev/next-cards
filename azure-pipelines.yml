@@ -35,6 +35,7 @@ steps:
     azureSubscription: 'GoCheatServiceConnection'
     containerAppName: 'gocheatcontainerapp'
     resourceGroup: 'GoCheat'
+    containerAppEnvironment: 'gocheat-env'
     imageToDeploy: 'gocheatregistry.azurecr.io/gocheatclient:latest'
     acrName: 'GoCheatRegistry'
     acrUsername: 'GoCheatRegistry'
