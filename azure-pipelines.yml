@@ -41,3 +41,4 @@ steps:
     acrUsername: 'GoCheatRegistry'
     acrPassword: $(acrPassword)
     targetPort: '3000'
+    environmentVariables: NEXT_PUBLIC_DOMAIN=gocheat.azurewebsites.net NEXT_PUBLIC_GO_BACKEND=gocheatserver.azurewebsites.net
